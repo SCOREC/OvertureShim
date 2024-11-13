@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "sendToHDF5.C": "cpp",
+    "gridShim.C": "cpp"
+  }
+}

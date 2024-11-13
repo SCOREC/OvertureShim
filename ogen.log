@@ -1,0 +1,29 @@
+Ogen: myid=0 initialize start
+ ********************************************* 
+ ************** Ogen log file **************** 
+ ********************************************* 
+
+Ogen: myid=0 initialize end
+grid   0 points: discretization=     328, interpolation=     40, all=     400, unused=      32, name=outside
+grid   1 points: discretization=      25, interpolation=     24, all=      49, unused=       0, name=inside
+grid   2 points: discretization=      25, interpolation=     24, all=      49, unused=       0, name=inside2
+total    points: discretization=     378, interpolation=     88, all=     498, unused=      32
+-----------------------------------------------------------------------------------
+                                                        cpu (seconds)          
+                                                    max/proc     ave    percentage   
+update geometry.....................................3.07e-04  3.07e-04    21.42       
+interpolate boundaries..............................2.78e-04  2.78e-04    19.40       
+cut holes...........................................6.80e-05  6.80e-05     4.75       
+remove exterior points..............................3.10e-05  3.10e-05     2.16       
+improper interpolation..............................1.68e-04  1.68e-04    11.72       
+proper interpolation................................1.00e-04  1.00e-04     6.98       
+all interpolation...................................1.47e-04  1.47e-04    10.26       
+improve quality of interpolation....................0.00e+00  0.00e+00     0.00       
+remove redundant points.............................7.30e-05  7.30e-05     5.09       
+sum of above........................................1.17e-03  1.17e-03    81.79       
+total...............................................1.43e-03  1.43e-03   100.00       
+-----------------------------------------------------------------------------------
+===== number of processors=1, number of possible extra multigrid levels=0. ====
+===== pts/s=347523,  interp-pts/s=61409.6, pts/s/proc=347523, interp-pts/s/proc=61409.6
+===== memory per-proc: [min=32.4023,ave=32.4023,max=32.4023](Mb), reals/pt=8528.19,  total-mem=32.4023 (Mb)
+===== max-mem-recorded/proc = 32.4023 (Mb), total-max-mem=32.4023 (Mb), reals/pt=8528.19
