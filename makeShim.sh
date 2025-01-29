@@ -1,4 +1,5 @@
 #!/bin/bash
+
 cd src
-make -j 32
+make -j${nproc}
 cd ..
