@@ -15,31 +15,42 @@
 #include <string>
 #include "sendToHDF5.h"
 
-int 
-main(int argc, char *argv[])
+
+int main( int argc, char *argv[] )
 {
 
-  std::string outhdf;
-  const char* fileName;
-  if( argc==3 )
+  std::string   outhdf;
+  const char*   fileName;
+
+  if( argc == 3 )
   {
-    fileName=argv[1];
-    outhdf=argv[2];
+    fileName  = argv[ 1 ];
+    outhdf    = argv[ 2 ];
   }
   else
   {
     std::cerr << "Usage: gridShimOut gridName.in outfile.hdf " << std::endl;
   }
 
-  int dim;
-  int *interior_box;
-  int *domain_box;
-  double *xy;
-  int *mask;
+  int     dim;
+  int     *interior_box;
+  int     *domain_box;
+  double  *xy;
+  int     *mask;
 
-  int status = getFromFile( fileName, &dim, &interior_box, &domain_box, &xy, &mask );
+  int status  =   getFromTextFile(  fileName, 
+                                    &dim, 
+                                    &interior_box, 
+                                    &domain_box, 
+                                    &xy, 
+                                    &mask );
 
-  status =  sendToHDF5( outhdf, dim, interior_box, domain_box, xy, mask );
+  status      =   sendToHDF5(       outhdf, 
+                                    dim, 
+                                    interior_box, 
+                                    domain_box, 
+                                    xy, 
+                                    mask );
   
   return 0;
 }

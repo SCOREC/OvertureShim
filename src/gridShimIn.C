@@ -138,7 +138,12 @@ int main( int argc, char *argv[] )
       << interior_box[1][0] << interior_box[1][1] 
       << std::endl;
 
-    int status = sendToFile( saveLocation, numberOfDimensions, interior_box, domain_box, xy, desc );
+    int status = sendToTextFile(  saveLocation, 
+                                  numberOfDimensions, 
+                                  interior_box, 
+                                  domain_box, 
+                                  xy, 
+                                  desc );
 
     grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  // destroy arrays to save space
 

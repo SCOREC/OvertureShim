@@ -8,15 +8,15 @@
             "name": "(gdb) Launch Shim",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/shim",
-            "miDebuggerPath": "/usr/share/gdb",
+            "program": "/home/overture/OvertureShim",
+            "miDebuggerPath": "/usr/bin/gdb",
             "sourceFileMap": 
             {
-                "/path/in/build/system": "/home/overture/shim"
+                "/path/in/build/system": "/home/overture/OvertureShim"
             },
             "args": [],
             "stopAtEntry": false,
-            "cwd": "/home/overture/shim",
+            "cwd": "/home/overture/OvertureShim",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
