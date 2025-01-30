@@ -8,12 +8,12 @@
 //     mpirun -np 2 gridShim cic.hdf cic.out
 // ==================================================================================
 
-#include "sendToHDF5.h"
+#include "inAndOutHDF5.h"
 #include "inAndOut.h"
+
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-#include "sendToHDF5.h"
 
 
 int main( int argc, char *argv[] )

@@ -15,7 +15,8 @@ int sendToTextFile( const char*   fileName,
   std::cout << "Arrived in sendToTextFile" << std::endl;
   outputFile.open( fileName );
 
-  if( !outputFile ){
+  if( !outputFile )
+  {
     std::cerr << "Error: file '" << fileName << "' could not be opened!" << std::endl;
     std::exit( 1 );
   }

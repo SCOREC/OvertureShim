@@ -32,16 +32,57 @@
 
 int main( int argc, char *argv[] )
 {
-  
+    /////////////////////////////////////////////////////////////////////////
+    // Preperations for accessing and saving files //////////////////////////
+    printF( " Usage: gridShimIn gridName.hdf outfile.txt \n" );    //////////
+                                                                //////////
+    aString nameOfOGFile;                                          //////////
+    const char *nameOfNewFile;                                     //////////
+                                                                //////////
+    if( argc == 3 )                                                //////////                    
+    {                                                              //////////
+        nameOfOGFile    = argv[1];                                   //////////
+        nameOfNewFile   = argv[2];                                   //////////
+    }                                                              //////////                           
+    else                                                           //////////
+    {                                                              //////////
+        printF( "Usage: gridShimIn gridName.hdf outfile.hdf \n" );   //////////
+        //Overture::abort( "error" );                                  //////////
+    }                                                              //////////
+                                                                //////////
+    const char *fileDir = "/home/overture/shim/textOutputs/";      //////////
+                                                                    //////////
+    char saveLocation[100];                                        //////////
+    strcpy( saveLocation, fileDir );                               //////////
+    strcat( saveLocation, nameOfNewFile );                         //////////
+    strcat( saveLocation, ".txt" );                                //////////
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
-    int status = sendToTextFile(  saveLocation, 
+    
+
+
+    int     *dim;
+    int     ***interior_box;
+    int     ***domain_box;
+    double  ****xy;  // xy[ i ][ j ][ k ][ l ]: j -> x, k -> y, l -> z, i -> numOfComponentGrids
+    int     ***mask; // mask[ i ][ j ][ k ]: i -> numOfComponentGrids, j, k -> ptTypes
+
+    int status = getFromHDF5(   nameOfOGFile, 
+                                dim, 
+                                interior_box, 
+                                domain_box, 
+                                xy, 
+                                mask );
+
+
+    status     = sendToTextFile(  saveLocation, 
                                   numberOfDimensions, 
                                   interior_box, 
                                   domain_box, 
                                   xy, 
                                   desc );
 
-    grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  // destroy arrays to save space
 
   }
   printF( "Output written to file %s\n", fileName );

@@ -12,5 +12,5 @@ int getFromHDF5(    const char*   fileName,
                     int           *dim, 
                     int           **interior_box, 
                     int           **domain_box, 
-                    double        **xy, 
+                    double        ***xy, 
                     int           **mask );

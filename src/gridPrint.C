@@ -84,6 +84,7 @@ int main( int argc,  char *argv[] )
     // const IntegerArray & er = c.extendedRange(  );
     const IntegerArray & bc   = c.boundaryCondition(  );
 
+    fprintf( file, "\n" );
     fprintf( file,  "%i %s ( grid # and name )\n"
                     "%i %i %i %i %i %i ( dimension( 0:1, 0:2 ),  array dimensions )\n"
                     "%i %i %i %i %i %i ( gridIndexRange( 0:1, 0:2 ),  grid bounds )\n"
