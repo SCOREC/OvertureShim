@@ -9,8 +9,10 @@ int sendToHDF5(     std::string   filename,
                     int           **mask );
 
 int getFromHDF5(    const char*   fileName, 
-                    int           *dim, 
+                    int           *numOfComponentGrids, 
+                    //int           *dim, 
                     int           **interior_box, 
                     int           **domain_box, 
                     double        ***xy, 
-                    int           **mask );
+                    //int           **mask, 
+                    int           **desc );

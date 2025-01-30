@@ -51,6 +51,8 @@
     "streambuf": "cpp",
     "cinttypes": "cpp",
     "typeinfo": "cpp",
-    "gridShimIn.C": "cpp"
+    "gridShimIn.C": "cpp",
+    "inAndOutHDF5.C": "cpp",
+    "pppWave.C": "cpp"
   }
 }

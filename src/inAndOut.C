@@ -3,12 +3,13 @@
 #include "inAndOut.h"
 
 
-int sendToTextFile( const char*   fileName, 
+int sendToTextFile( const char*   fileName,
+                    int           numOfComponentGrids, 
                     int           dim, 
-                    int           **interior_box, 
-                    int           **domain_box, 
-                    double        ***xy, 
-                    int           **mask )
+                    int           ***interior_box, 
+                    int           ***domain_box, 
+                    double        ****xy, 
+                    int           ***mask )
 {
   std::ofstream   outputFile;
 
@@ -23,39 +24,42 @@ int sendToTextFile( const char*   fileName,
 
   outputFile << dim << std::endl;
 
-  std::cout   << interior_box[ 0 ][ 0 ] << "\t" << interior_box[ 0 ][ 1 ] << "\t" 
-              << interior_box[ 1 ][ 0 ] << "\t" << interior_box[ 1 ][ 1 ] 
-              << std::endl;
-
-  outputFile  << interior_box[ 0 ][ 0 ] << "\t" << interior_box[ 0 ][ 1 ] << "\t" 
-              << interior_box[ 1 ][ 0 ] << "\t" << interior_box[ 1 ][ 1 ] 
-              << std::endl;
-      
-  outputFile  << domain_box[ 0 ][ 0 ] << "\t" << domain_box[ 0 ][ 1 ] << "\t" 
-              << domain_box[ 1 ][ 0 ] << "\t" << domain_box[ 1 ][ 1 ] 
-              << std::endl;
-  
-  for ( int i = domain_box[ 0 ][ 0 ]; i <= domain_box[ 1 ][ 0 ]; i++ )
+  for ( int gridIndex = 0; gridIndex < numOfComponentGrids; gridIndex++ )
   {
-    for ( int j = domain_box[ 0 ][ 1 ]; j <= domain_box[ 1 ][ 1 ]; j++ )
+    std::cout   << interior_box[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 0 ][ 1 ] << "\t" 
+                << interior_box[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 1 ][ 1 ] 
+                << std::endl;
+
+    outputFile  << interior_box[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 0 ][ 1 ] << "\t" 
+                << interior_box[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 1 ][ 1 ] 
+                << std::endl;
+        
+    outputFile  << domain_box[ gridIndex ][ 0 ][ 0 ] << "\t" << domain_box[ gridIndex ][ 0 ][ 1 ] << "\t" 
+                << domain_box[ gridIndex ][ 1 ][ 0 ] << "\t" << domain_box[ gridIndex ][ 1 ][ 1 ] 
+                << std::endl;
+    
+    for ( int i = domain_box[ gridIndex ][ 0 ][ 0 ]; i <= domain_box[ gridIndex ][ 1 ][ 0 ]; i++ )
     {
-      for ( int k = 0; k < dim; k++ )
+      for ( int j = domain_box[ gridIndex ][ 0 ][ 1 ]; j <= domain_box[ gridIndex ][ 1 ][ 1 ]; j++ )
       {
-        outputFile << xy[ i ][ j ][ k ] << "\t";
+        for ( int k = 0; k < dim; k++ )
+        {
+          outputFile << xy[ gridIndex ][ i ][ j ][ k ] << "\t";
+        }
       }
     }
-  }
 
-  outputFile << std::endl;
+    outputFile << std::endl;
 
-  for ( int i = domain_box[ 0 ][ 0 ]; i <= domain_box[ 1 ][ 0 ]; i++ )
-  {
-    for ( int j = domain_box[ 0 ][ 1 ]; j <= domain_box[ 1 ][ 1 ]; j++ )
+    for ( int i = domain_box[ gridIndex ][ 0 ][ 0 ]; i <= domain_box[ gridIndex ][ 1 ][ 0 ]; i++ )
     {
-      outputFile << mask[ i ][ j ] << "\t";
+      for ( int j = domain_box[ gridIndex ][ 0 ][ 1 ]; j <= domain_box[ gridIndex ][ 1 ][ 1 ]; j++ )
+      {
+        outputFile << mask[ gridIndex ][ i ][ j ] << "\t";
+      }
     }
+    outputFile << std::endl;
   }
-  outputFile << std::endl;
 
   outputFile.close();
   return 0;

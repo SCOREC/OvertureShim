@@ -133,11 +133,14 @@ int sendToHDF5(   std::string   nameOfNewFile,
 
 
 int getFromHDF5(  const char*   nameOfNewFile, 
-                  int           *dim, 
+                  int           *numOfComponentGrids, 
+                  int           *numberOfDimensions,
+                  //int           *dim, 
                   int           ***interior_box, 
                   int           ***domain_box, 
                   double        ****xy, 
-                  int           ***mask )
+                  //int           ***mask,
+                  int           ***desc )
 {
   /////////////////////////////////////////////////////////////////////////
   // initialize Overture //////////////////////////////////////////////////
@@ -156,16 +159,17 @@ int getFromHDF5(  const char*   nameOfNewFile,
   /////////////////////////////////////////////////////////////////////////
 
   // initialize first dimension of grid data ///////////////////////////////////
-  int numOfComponentGrids = compositeGrid.numberOfComponentGrids();
+  *(numOfComponentGrids)  = compositeGrid.numberOfComponentGrids();
 
   interior_box            = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
   domain_box              = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
   xy                      = (double ****) malloc( sizeof(double***) * numOfComponentGrids );
-  mask                    = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
+  //mask                    = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
+  desc                    = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
   ///////////////////////////////////////////////////////////////////////////////
 
   
-  const int numberOfDimensions = compositeGrid.numberOfDimensions();
+  *(numberOfDimensions)   = compositeGrid.numberOfDimensions();
   
   const IntegerArray & ni = compositeGrid.numberOfInterpolationPoints;
   
@@ -194,11 +198,11 @@ int getFromHDF5(  const char*   nameOfNewFile,
     
     
 
-    const intArray & mask[ gridIndex ] = grid.mask();
+    const intArray & mask = grid.mask();
     intSerialArray maskLocal; 
 
     // local array on this processor
-    getLocalArrayWithGhostBoundaries( mask[ gridIndex ], maskLocal );  
+    getLocalArrayWithGhostBoundaries( mask, maskLocal );  
     const realArray & vertex = grid.vertex();
     realSerialArray vertexLocal; 
 
@@ -227,18 +231,18 @@ int getFromHDF5(  const char*   nameOfNewFile,
     }
 
     // Note that k below is just 0, not a real loop index. Only one Z index.
-    int     **desc    = (int **)      malloc( sizeof(int   *)  * ( nx + 1 ) );
-    xy[ gridIndex ]   = (double ***)  malloc( sizeof(double**) * ( nx + 1 ) );
+    desc[ gridIndex ]    = (int **)      malloc( sizeof(int   *)  * ( nx + 1 ) );
+    xy  [ gridIndex ]    = (double ***)  malloc( sizeof(double**) * ( nx + 1 ) );
     
     for( int i = 0; i < nx + 1; i++ )
     {
-      desc           [ i ]   = (int *)       malloc( sizeof(int   *) * ( ny + 1 ) );
-      xy[ gridIndex ][ i ]   = (double **)   malloc( sizeof(double*) * ( ny + 1 ) );
+      desc[ gridIndex ][ i ]   = (int *)       malloc( sizeof(int   *) * ( ny + 1 ) );
+      xy  [ gridIndex ][ i ]   = (double **)   malloc( sizeof(double*) * ( ny + 1 ) );
 
       for( int j = 0; j < ny + 1; j++ )
       {
-        desc           [ i ][ j ]    = maskLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k ) >= 0 ? 0: 1;
-        xy[ gridIndex ][ i ][ j ]    = (double *) malloc( sizeof(double) * numberOfDimensions );
+        desc[ gridIndex ][ i ][ j ]    = maskLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k ) >= 0 ? 0: 1;
+        xy  [ gridIndex ][ i ][ j ]    = (double *) malloc( sizeof(double) * numberOfDimensions );
 
         for( int l = 0; l < numberOfDimensions; l++ )
         {

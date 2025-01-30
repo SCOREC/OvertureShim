@@ -61,23 +61,29 @@ int main( int argc, char *argv[] )
 
     
 
-
-    int     *dim;
+    //int     *dim;
+    int     *numOfComponentGrids;
+    int     *numberOfDimensions;
     int     ***interior_box;
     int     ***domain_box;
     double  ****xy;  // xy[ i ][ j ][ k ][ l ]: j -> x, k -> y, l -> z, i -> numOfComponentGrids
-    int     ***mask; // mask[ i ][ j ][ k ]: i -> numOfComponentGrids, j, k -> ptTypes
+    //int     ***mask; // mask[ i ][ j ][ k ]: i -> numOfComponentGrids, j, k -> ptTypes
+    int     ***desc;
 
-    int status = getFromHDF5(   nameOfOGFile, 
-                                dim, 
+    int status = getFromHDF5(   nameOfOGFile,
+                                numOfComponentGrids,
+                                numberOfDimensions, 
+                                //dim, 
                                 interior_box, 
                                 domain_box, 
                                 xy, 
-                                mask );
+                                //mask,
+                                desc );
 
 
     status     = sendToTextFile(  saveLocation, 
-                                  numberOfDimensions, 
+                                  &numOfComponentGrids,
+                                  &numberOfDimensions, 
                                   interior_box, 
                                   domain_box, 
                                   xy, 
