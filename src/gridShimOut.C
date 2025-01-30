@@ -32,18 +32,18 @@ int main( int argc, char *argv[] )
     std::cerr << "Usage: gridShimOut gridName.in outfile.hdf " << std::endl;
   }
 
-  int     dim;
-  int     *interior_box;
-  int     *domain_box;
-  double  *xy;
-  int     *mask;
+  int     *dim;
+  int     **interior_box;
+  int     **domain_box;
+  double  ***xy;
+  int     **mask;
 
   int status  =   getFromTextFile(  fileName, 
-                                    &dim, 
-                                    &interior_box, 
-                                    &domain_box, 
-                                    &xy, 
-                                    &mask );
+                                    dim, 
+                                    interior_box, 
+                                    domain_box, 
+                                    xy, 
+                                    mask );
 
   status      =   sendToHDF5(       outhdf, 
                                     dim, 

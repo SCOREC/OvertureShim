@@ -31,7 +31,7 @@
 int main( int argc,  char *argv[] )
 {
   Overture::start( argc, argv );  // initialize Overture
-  const int np    = max( 1, Communication_Manager::numberOfProcessors(  ) );  // number of processors
+  const int np    = max( 1, Communication_Manager::numberOfProcessors() );  // number of processors
   const int myid  = max( 0, Communication_Manager::My_Process_Number );    // my rank 
 
   printF( " Usage: gridPrint gridName.hdf outfile \n" );
@@ -51,7 +51,7 @@ int main( int argc,  char *argv[] )
 
   FILE *file = NULL;
   if(  np == 1  )
-    file= fopen( ( const char* )fileName, "w"  );
+    file = fopen( ( const char* )fileName, "w"  );
   else 
   {
     // In parallel write info to separate files on each processor
@@ -66,11 +66,12 @@ int main( int argc,  char *argv[] )
   getFromADataBase( cg,  nameOfOGFile );
   const int numberOfDimensions = cg.numberOfDimensions(  );
   
-  fprintf( file, "%i %i  ( number of grids,  number of dimensions )\n", cg.numberOfComponentGrids(  ), numberOfDimensions );
+  fprintf( file, "%i %i  ( number of grids,  number of dimensions )\n", 
+                 cg.numberOfComponentGrids(  ), numberOfDimensions );
 
   const IntegerArray & ni = cg.numberOfInterpolationPoints;
 
-  for(  int grid=0; grid < cg.numberOfComponentGrids(); grid++  )
+  for(  int grid = 0; grid < cg.numberOfComponentGrids(); grid++  )
   {
     MappedGrid & c = cg[ grid ];
     c.update( MappedGrid::THEvertex | MappedGrid::THEmask  );  // create the vertex and mask arrays
@@ -83,16 +84,16 @@ int main( int argc,  char *argv[] )
     // const IntegerArray & er = c.extendedRange(  );
     const IntegerArray & bc   = c.boundaryCondition(  );
 
-    fprintf( file,  "%i %s ( grid and name )\n"
+    fprintf( file,  "%i %s ( grid # and name )\n"
                     "%i %i %i %i %i %i ( dimension( 0:1, 0:2 ),  array dimensions )\n"
                     "%i %i %i %i %i %i ( gridIndexRange( 0:1, 0:2 ),  grid bounds )\n"
                     "%i %i %i %i %i %i ( boundaryCondition( 0:1, 0:2 ) )\n"
                     "%i %i %i          ( isPeriodic( 0:2 ),  0=not,  1=deriv,  2=function )\n", 
-	    grid       , ( const char* )c.getName(  ), 
-	    d  ( 0, 0 ), d  ( 1, 0 ), d  ( 0, 1 ), d  ( 1, 1 ), d  ( 0, 2 ), d  ( 1, 2 ), 
-	    gir( 0, 0 ), gir( 1, 0 ), gir( 0, 1 ), gir( 1, 1 ), gir( 0, 2 ), gir( 1, 2 ), 
-	    bc ( 0, 0 ), bc ( 1, 0 ), bc ( 0, 1 ), bc ( 1, 1 ), bc ( 0, 2 ), bc ( 1, 2 ), 
-	    c.isPeriodic( 0 ), c.isPeriodic( 1 ), c.isPeriodic( 2 ) );
+                    grid       , ( const char* )c.getName(  ), 
+                    d  ( 0, 0 ), d  ( 1, 0 ), d  ( 0, 1 ), d  ( 1, 1 ), d  ( 0, 2 ), d  ( 1, 2 ), 
+                    gir( 0, 0 ), gir( 1, 0 ), gir( 0, 1 ), gir( 1, 1 ), gir( 0, 2 ), gir( 1, 2 ), 
+                    bc ( 0, 0 ), bc ( 1, 0 ), bc ( 0, 1 ), bc ( 1, 1 ), bc ( 0, 2 ), bc ( 1, 2 ), 
+                    c.isPeriodic( 0 ), c.isPeriodic( 1 ), c.isPeriodic( 2 ) );
     
     fprintf( file, "%i ( total number of interpolation points )\n", ni( grid ) );
     if(  ni( grid ) > 0  )
@@ -139,7 +140,7 @@ int main( int argc,  char *argv[] )
         for(  int i = ip0.getBase( 0 ); i <= ip0.getBound( 0 ); i++  )
         {
           fprintf( file, "%i %i %i  ( ip )\n", 
-                   ip0( i, 0 ), ip0( i, 1 ), ( numberOfDimensions==2 ? 0 : ip0( i, 2 ) ) 
+                   ip0( i, 0 ), ip0( i, 1 ), ( numberOfDimensions == 2 ? 0 : ip0( i, 2 ) ) 
                  );
         }
 
@@ -153,7 +154,7 @@ int main( int argc,  char *argv[] )
 
       int niLocal = ip.getLength( 0 );  // number of interpolation points on this processor
       fprintf( file, "%i ( number of interpolation points on this processor )\n", niLocal );
-      for(  int i=ip.getBase( 0 ); i <= ip.getBound( 0 ); i++  )
+      for(  int i = ip.getBase( 0 ); i <= ip.getBound( 0 ); i++  )
       {
 	      fprintf(  file, "%i,  %i,  (%i,  %i,  %i),   (%i,  %i,  %i),   (%i,  %i,  %i),  (%e,  %e,  %e) ( donor,  width,  ip,  il,  ci )\n", 
                   ig( i )   ,    viw( i ), 
@@ -211,7 +212,7 @@ int main( int argc,  char *argv[] )
       fprintf( file, "vertex ( based on the dimension array )\n" );
       FOR_3( i1, i2, i3, I1, I2, I3 )
       {
-        if(  numberOfDimensions==2  )
+        if(  numberOfDimensions == 2  )
           fprintf( file, "%e %e", vertexLocal( i1, i2, i3, 0 ), vertexLocal( i1, i2, i3, 1 ) );
         else
           fprintf( file, "%e %e %e", vertexLocal( i1, i2, i3, 0 ), vertexLocal( i1, i2, i3, 1 ), vertexLocal( i1, i2, i3, 2 ) );
@@ -219,6 +220,7 @@ int main( int argc,  char *argv[] )
       fprintf( file, "\n" );
     }
     
+
     c.destroy( MappedGrid::THEvertex | MappedGrid::THEmask  );  // destroy arrays to save space
 
   }
