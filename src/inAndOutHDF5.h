@@ -1,5 +1,11 @@
 #include <string>
 
+#include "Overture.h"  
+#include "PlotStuff.h"
+#include "display.h"
+#include "ParallelUtility.h"
+#include <stdlib.h>
+
 
 int sendToHDF5(     std::string   filename,
                     int           *spacedim,
@@ -8,11 +14,12 @@ int sendToHDF5(     std::string   filename,
                     double        ***xy,
                     int           **mask );
 
-int getFromHDF5(    const char*   fileName, 
+int getFromHDF5(    aString       fileName, 
                     int           *numOfComponentGrids, 
+                    int           *numberOfDimensions,
                     //int           *dim, 
-                    int           **interior_box, 
-                    int           **domain_box, 
-                    double        ***xy, 
+                    int           ***interior_box, 
+                    int           ***domain_box, 
+                    double        ****xy, 
                     //int           **mask, 
-                    int           **desc );
+                    int           ***desc );

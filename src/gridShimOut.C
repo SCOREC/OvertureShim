@@ -19,13 +19,13 @@
 int main( int argc, char *argv[] )
 {
 
-  std::string   outhdf;
-  const char*   fileName;
+  std::string   nameOfNewFile;
+  const char*   nameOfOGFile;
 
   if( argc == 3 )
   {
-    fileName  = argv[ 1 ];
-    outhdf    = argv[ 2 ];
+    nameOfOGFile  = argv[ 1 ];
+    nameOfNewFile    = argv[ 2 ];
   }
   else
   {
@@ -38,14 +38,14 @@ int main( int argc, char *argv[] )
   double  ***xy;
   int     **mask;
 
-  int status  =   getFromTextFile(  fileName, 
+  int status  =   getFromTextFile(  nameOfOGFile, 
                                     dim, 
                                     interior_box, 
                                     domain_box, 
                                     xy, 
                                     mask );
 
-  status      =   sendToHDF5(       outhdf, 
+  status      =   sendToHDF5(       nameOfNewFile, 
                                     dim, 
                                     interior_box, 
                                     domain_box, 

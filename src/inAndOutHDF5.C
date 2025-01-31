@@ -5,12 +5,28 @@
 #include <iostream>
 #endif
 
-#include "H5Cpp.h"
 #include "inAndOutHDF5.h"
+#include "H5Cpp.h"
+
 
 #ifndef H5_NO_NAMESPACE
 using namespace H5;
 #endif
+
+#define FOR_3D( i1, i2, i3, I1, I2, I3 ) \
+    int I1Base  = I1.getBase(),   I2Base  = I2.getBase(),  I3Base  = I3.getBase();  \
+    int I1Bound = I1.getBound(),  I2Bound = I2.getBound(), I3Bound = I3.getBound(); \
+    for( i3 = I3Base; i3 <= I3Bound; i3++ ) \
+    for( i2 = I2Base; i2 <= I2Bound; i2++ ) \
+    for( i1 = I1Base; i1 <= I1Bound; i1++ )
+
+#define FOR_3( i1, i2, i3, I1, I2, I3 ) \
+    I1Base  = I1.getBase(),   I2Base  = I2.getBase(),  I3Base  = I3.getBase();  \
+    I1Bound = I1.getBound(),  I2Bound = I2.getBound(), I3Bound = I3.getBound(); \
+    for( i3 = I3Base; i3 <= I3Bound; i3++ ) \
+    for( i2 = I2Base; i2 <= I2Bound; i2++ ) \
+    for( i1 = I1Base; i1 <= I1Bound; i1++ )
+
 
 
 int sendToHDF5(   std::string   nameOfNewFile,
@@ -53,7 +69,7 @@ int sendToHDF5(   std::string   nameOfNewFile,
                                                   PredType::NATIVE_INT, 
                                                   fspace ) 
                          );
-    dataset ->      write(  spacedim, 
+    dataset ->      write(  spaceDim, 
                             PredType::NATIVE_INT );
 
     delete dataset;
@@ -72,13 +88,13 @@ int sendToHDF5(   std::string   nameOfNewFile,
 
 
     // Set xy ///////////////////////////////////////////////////////
-    int nx = *(domain_box + 2*1 + 0) - *(domain_box + 2*0 + 0);
-    int ny = *(domain_box + 2*1 + 1) - *(domain_box + 2*0 + 1);
+    int nx = domain_box[ 1 ][ 0 ] - domain_box[ 0 ][ 0 ];
+    int ny = domain_box[ 1 ][ 1 ] - domain_box[ 0 ][ 1 ];
     
     hsize_t   gridsize[] = {  static_cast<hsize_t>(nx + 1), 
                               static_cast<hsize_t>(ny + 1), 
                               2 };
-    DataSpace xyspace(  ( *spacedim ) + 1, 
+    DataSpace xyspace(  ( *spaceDim ) + 1, 
                         gridsize );
     
     dataset = new DataSet( 
@@ -132,7 +148,7 @@ int sendToHDF5(   std::string   nameOfNewFile,
 
 
 
-int getFromHDF5(  const char*   nameOfNewFile, 
+int getFromHDF5(  aString       nameOfOGFile, 
                   int           *numOfComponentGrids, 
                   int           *numberOfDimensions,
                   //int           *dim, 
@@ -141,19 +157,10 @@ int getFromHDF5(  const char*   nameOfNewFile,
                   double        ****xy, 
                   //int           ***mask,
                   int           ***desc )
-{
-  /////////////////////////////////////////////////////////////////////////
-  // initialize Overture //////////////////////////////////////////////////
-  Overture::start( argc, argv );  
-
-  // number of processors:
-  const int np   = max( 1, Communication_Manager::numberOfProcessors() ); 
-
-  // my rank:
-  const int myid = max( 0, Communication_Manager::My_Process_Number );   
-
+{   
   // Read in a CompositeGrid
   CompositeGrid compositeGrid;
+  //aString nameOfOGFile;
   getFromADataBase( compositeGrid, nameOfOGFile );
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -161,11 +168,11 @@ int getFromHDF5(  const char*   nameOfNewFile,
   // initialize first dimension of grid data ///////////////////////////////////
   *(numOfComponentGrids)  = compositeGrid.numberOfComponentGrids();
 
-  interior_box            = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
-  domain_box              = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
-  xy                      = (double ****) malloc( sizeof(double***) * numOfComponentGrids );
-  //mask                    = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
-  desc                    = (int    ***)  malloc( sizeof(int   **)  * numOfComponentGrids );
+  interior_box            = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
+  domain_box              = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
+  xy                      = (double ****) malloc( sizeof(double***) * *(numOfComponentGrids) );
+  //mask                    = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
+  desc                    = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
   ///////////////////////////////////////////////////////////////////////////////
 
   
@@ -173,7 +180,7 @@ int getFromHDF5(  const char*   nameOfNewFile,
   
   const IntegerArray & ni = compositeGrid.numberOfInterpolationPoints;
   
-  for ( int gridIndex = 0; gridIndex < numOfComponentGrids; gridIndex++ )
+  for ( int gridIndex = 0; gridIndex < *(numOfComponentGrids); gridIndex++ )
   {
     MappedGrid & grid = compositeGrid[ gridIndex ];
     grid.update( MappedGrid::THEvertex | MappedGrid::THEmask );  // create the vertex and mask arrays
@@ -214,16 +221,16 @@ int getFromHDF5(  const char*   nameOfNewFile,
 
 
     interior_box[ gridIndex ]         = (int **) malloc( sizeof(int *) * 2 );
-    interior_box[ gridIndex ][ 0 ]    = (int *)  malloc( sizeof(int) * numberOfDimensions );
-    interior_box[ gridIndex ][ 1 ]    = (int *)  malloc( sizeof(int) * numberOfDimensions );
+    interior_box[ gridIndex ][ 0 ]    = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
+    interior_box[ gridIndex ][ 1 ]    = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
 
     domain_box[ gridIndex ]           = (int **) malloc( sizeof(int *) * 2 );
-    domain_box[ gridIndex ][ 0 ]      = (int *)  malloc( sizeof(int) * numberOfDimensions );
-    domain_box[ gridIndex ][ 1 ]      = (int *)  malloc( sizeof(int) * numberOfDimensions );
+    domain_box[ gridIndex ][ 0 ]      = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
+    domain_box[ gridIndex ][ 1 ]      = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
 
     for ( int i = 0; i < 2; i++ )
     {
-      for ( int j = 0; j < numberOfDimensions; j++ )
+      for ( int j = 0; j < *(numberOfDimensions); j++ )
       {
         interior_box[ gridIndex ][ i ][ j ] = gridIndexRange( i, j ) - dim( 0, j );
         domain_box  [ gridIndex ][ i ][ j ] = dim( i, j ) - dim( 0, j );
@@ -242,9 +249,9 @@ int getFromHDF5(  const char*   nameOfNewFile,
       for( int j = 0; j < ny + 1; j++ )
       {
         desc[ gridIndex ][ i ][ j ]    = maskLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k ) >= 0 ? 0: 1;
-        xy  [ gridIndex ][ i ][ j ]    = (double *) malloc( sizeof(double) * numberOfDimensions );
+        xy  [ gridIndex ][ i ][ j ]    = (double *) malloc( sizeof(double) * *(numberOfDimensions) );
 
-        for( int l = 0; l < numberOfDimensions; l++ )
+        for( int l = 0; l < *(numberOfDimensions); l++ )
         {
           xy[ gridIndex ][ i ][ j ][ l ] = vertexLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k + dim( 0, 2 ), l );
         }
@@ -258,4 +265,6 @@ int getFromHDF5(  const char*   nameOfNewFile,
     // destroy arrays to save space
     grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  
   }
+
+  return 0;
 }

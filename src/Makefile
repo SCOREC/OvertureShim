@@ -174,7 +174,7 @@ LD = $(CC)
 LDFLAGS = -L/home/overture/overture/lib \
           -Wl,-rpath,/home/overture/hdf5-1.8.15-macPatch/lib -L/home/overture/hdf5-1.8.15-macPatch/lib -lhdf5 -lhdf5_cpp -ljpeg -lz \
           -lgfortran -Wl,-rpath,/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -L/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -lperl -ldl -lm -lpthread -lc -lcrypt \
-          -Wl,-rpath,/home/overture/Mesa-7.2/lib64 -L/home/overture/Mesa-7.2/lib64 -lGL -lGLU -lOSMesa \
+          -Wl,-rpath,/usr/opengl/lib64 -L/usr/opengl/lib64 -lGL -lGLU -lGLw -lOpenGL \
           -Wl,-rpath,/usr/motif/lib64 -L/usr/motif/lib64 -lXm -L/lib/x86_64-linux-gnu/lib64 -lXt -lXmu -lXi -lXext -lX11 \
           -Wl,-rpath,/home/overture/dependencies/A++/install/lib -L/home/overture/dependencies/A++/install/lib -lApp -lApp_static \
           -Wl,-rpath,/lib/x86_64-linux-gnu/ -L/lib/x86_64-linux-gnu/
@@ -185,7 +185,7 @@ RANLIB = ranlib
 SOFLAGS = -shared
 #xlc SOFLAGS = -qmkshrobj -qnostaticlink
 # the next line is changed by the configure script
-OpenGLibs =-lGL -lGLU -lOSMesa
+OpenGLibs =-lGL -lGLU -lGLw -lOpenGL
 # put App libs here since in parallel these may include mpi libs in /usr which conflicts with mesa
 GLIBS=  $(OV_PERL_LIBRARIES) $(OV_RPATH)$(OPENGL_LIB) -L$(OPENGL_LIB) $(OpenGLibs) $(OV_MOTIF_LIBRARIES) $(OV_X_LIBRARIES) $(AppLibraries) $(LAPACK_LIBRARIES) -lm
 
@@ -213,7 +213,7 @@ OGMGLIB = $(OV_RPATH)$(Overture)/lib $(LDFLAGS)$(Overture)/lib -lOgmg
 
 
 Source= lins.C wave.C ChannelMapping.C getDt.C \
-           rk.C gridGenExample.C sendToHDF5.C gridShimIn.C gridShimOut.C gridPrint.C
+           rk.C gridGenExample.C inAndOutHDF5.C gridShimIn.C gridShimOut.C gridPrint.C
 
 # Here are the things we can make
 PROGRAMS = lins wave gridGenExample gridShimIn gridShimOut gridPrint
@@ -242,18 +242,18 @@ gridGenExample = gridGenExample.o
 gridGenExample: $(gridGenExample) 
 	$(CC) $(CCFLAGS) -o gridGenExample $(gridGenExample) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-sendToHDF5.o: sendToHDF5.C
-	$(CC) $(CCFLAGS) -c sendToHDF5.C -o sendToHDF5.o
+inAndOutHDF5.o: inAndOutHDF5.C
+	$(CC) $(CCFLAGS) -c inAndOutHDF5.C -o inAndOutHDF5.o
 
 gridPrint := gridPrint.o
 gridPrint: $(gridPrint)
 	$(CC) $(CCFLAGS) -o gridPrint $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-gridShimIn := gridShimIn.o inAndOut.o
+gridShimIn := gridShimIn.o inAndOutHDF5.o inAndOut.o
 gridShimIn: $(gridShimIn)
 	$(CC) $(CCFLAGS) -o gridShimIn $(gridShimIn) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-gridShimOut := gridShimOut.o sendToHDF5.o inAndOut.o
+gridShimOut := gridShimOut.o inAndOutHDF5.o inAndOut.o
 gridShimOut: $(gridShimOut)
 	$(CC) $(CCFLAGS) -o gridShimOut $(gridShimOut) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
