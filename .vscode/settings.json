@@ -53,6 +53,8 @@
     "typeinfo": "cpp",
     "gridShimIn.C": "cpp",
     "inAndOutHDF5.C": "cpp",
-    "pppWave.C": "cpp"
+    "pppWave.C": "cpp",
+    "mogl.C": "cpp",
+    "OvertureInit.C": "cpp"
   }
 }

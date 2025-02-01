@@ -87,7 +87,7 @@ FORTRAN_OPTIMIZATION_FLAG = -g
 # Use this next flag to optimize files that Bill likes to by default compile optimized
 STD_OPT_FLAG = -O 
 
-CFLAGS =  $(cc_FLAGS)  $(Include)  $(C_OPTIMIZATION_FLAG) -I$(XLIBS) -DSHM
+CFLAGS = $(cc_FLAGS)  $(Include)  $(C_OPTIMIZATION_FLAG) -I$(XLIBS) -DSHM
 # flags for c routines we always optimize (except if debug is on)
 CFLAGSO =  $(STD_OPT_FLAG) $(cc_FLAGS)  $(Include)  -I$(XLIBS) -DSHM
 

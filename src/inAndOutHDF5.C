@@ -29,97 +29,132 @@ using namespace H5;
 
 
 
-int sendToHDF5(   std::string   nameOfNewFile,
-                  int           *spaceDim,
-                  int           **interior_box,
-                  int           **domain_box,
-                  double        ***xy,
-                  int           **mask )
+int sendToHDF5(   std::string     nameOfNewFile,
+                  int             *numberOfComponentGrids, 
+                  int             *numberOfDimensions,
+                  Array3D<int>    *interior_box, 
+                  Array3D<int>    *domain_box, 
+                  Array4D<double> *xy,
+                  Array3D<int>    *desc )
 {
   try
   {
 
     H5File* file = new H5File( nameOfNewFile, H5F_ACC_TRUNC );
-    Group group( file->createGroup("/grid1") );
+    
+
+    // Create a group for the composite grid in the file.
+    Group compGridGroup( file->createGroup( "/composite_grid") );
 
     // Create dataspace for dataset in file.
     DataSet   *dataset;
 
-    // Set interior box ///////////////////////////////////////////////////////
-    hsize_t     boxsize[] = {2, 2};
-    DataSpace   boxspace( 2, boxsize );
 
-    dataset = new DataSet( 
-                            group.createDataSet(  "interior_box", 
-                                                  PredType::NATIVE_INT, 
-                                                  boxspace ) 
-                         );
-    dataset ->      write(  interior_box, 
-                            PredType::NATIVE_INT );
-
-    delete dataset;
-
-
-    // Set dimensions ///////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Set dimensions //////////////////////////////////////////////////////////////////////
     hsize_t     dimsize[] = {1};
     DataSpace   fspace( 1, dimsize );
 
     dataset = new DataSet( 
-                            group.createDataSet(  "dim", 
-                                                  PredType::NATIVE_INT, 
-                                                  fspace ) 
-                         );
-    dataset ->      write(  spaceDim, 
+                            compGridGroup.createDataSet(  "dim", 
+                                                          PredType::NATIVE_INT, 
+                                                          fspace ) 
+                    );
+    dataset ->      write(  numberOfDimensions, 
                             PredType::NATIVE_INT );
 
     delete dataset;
-
-
-    // Set domain box ///////////////////////////////////////////////////////
-    dataset = new DataSet( 
-                            group.createDataSet(  "domain_box", 
-                                                  PredType::NATIVE_INT, 
-                                                  boxspace ) 
-                         );
-    dataset ->      write(  domain_box, 
-                            PredType::NATIVE_INT );
-
-    delete dataset;
-
-
-    // Set xy ///////////////////////////////////////////////////////
-    int nx = domain_box[ 1 ][ 0 ] - domain_box[ 0 ][ 0 ];
-    int ny = domain_box[ 1 ][ 1 ] - domain_box[ 0 ][ 1 ];
+    /////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////
     
-    hsize_t   gridsize[] = {  static_cast<hsize_t>(nx + 1), 
-                              static_cast<hsize_t>(ny + 1), 
-                              2 };
-    DataSpace xyspace(  ( *spaceDim ) + 1, 
-                        gridsize );
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Set numberOfComponentGrids ///////////////////////////////////////////////////////
     
-    dataset = new DataSet( 
-                            group.createDataSet(  "xy", 
-                                                  PredType::NATIVE_DOUBLE, 
-                                                  xyspace ) 
-                         );
-    dataset ->      write(  xy, 
-                            PredType::NATIVE_DOUBLE );
-
-    delete dataset;
-
-
-    // Set mask ///////////////////////////////////////////////////////
-    DataSpace   maskspace( 2, gridsize );
+    hsize_t     numOfGridsIntSize[] = {1};
+    DataSpace   fspace( 1, numOfGridsIntSize );
 
     dataset = new DataSet( 
-                            group.createDataSet(  "mask", 
-                                                  PredType::NATIVE_INT, 
-                                                  maskspace ) 
-                         );
-    dataset ->      write(  mask, 
+                            compGridGroup.createDataSet(  "num_of_component_grids", 
+                                                          PredType::NATIVE_INT, 
+                                                          fspace ) 
+                    );
+    dataset ->      write(  numberOfComponentGrids, 
                             PredType::NATIVE_INT );
 
     delete dataset;
+    /////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////
+
+
+    for ( int gridIndex = 0; gridIndex < *numberOfComponentGrids; gridIndex++ )
+    {
+      // Create a grid group in the file.
+      Group group( compGridGroup.createGroup( "grid" + std::to_string( gridIndex ) ) );
+
+
+      // Set interior box ///////////////////////////////////////////////////////
+      hsize_t     boxsize[] = {2, 2};
+      DataSpace   boxspace( 2, boxsize );
+
+      dataset = new DataSet( 
+                              group.createDataSet(  "interior_box", 
+                                                    PredType::NATIVE_INT, 
+                                                    boxspace ) 
+                          );
+      dataset ->      write(  interior_box -> data[ gridIndex ], 
+                              PredType::NATIVE_INT );
+
+      delete dataset;
+      /////////////////////////////////////////////////////////////////////////////////////
+
+      // Set domain box ///////////////////////////////////////////////////////
+      dataset = new DataSet( 
+                              group.createDataSet(  "domain_box", 
+                                                    PredType::NATIVE_INT, 
+                                                    boxspace ) 
+                          );
+      dataset ->      write(  domain_box -> data[ gridIndex ], 
+                              PredType::NATIVE_INT );
+
+      delete dataset;
+      /////////////////////////////////////////////////////////////////////////////////////
+
+      // Set xy ///////////////////////////////////////////////////////
+      int nx = domain_box[ 1 ][ 0 ] - domain_box[ 0 ][ 0 ];
+      int ny = domain_box[ 1 ][ 1 ] - domain_box[ 0 ][ 1 ];
+      
+      hsize_t   gridsize[] = {  static_cast<hsize_t>(nx + 1), 
+                                static_cast<hsize_t>(ny + 1), 
+                                2 };
+      DataSpace xyspace(  ( *numberOfDimensions ) + 1, 
+                          gridsize );
+      
+      dataset = new DataSet( 
+                              group.createDataSet(  "xy", 
+                                                    PredType::NATIVE_DOUBLE, 
+                                                    xyspace ) 
+                          );
+      dataset ->      write(  xy -> data[ gridIndex ], 
+                              PredType::NATIVE_DOUBLE );
+
+      delete dataset;
+      /////////////////////////////////////////////////////////////////////////////////////
+
+      // Set mask ///////////////////////////////////////////////////////////////
+      DataSpace   maskspace( 2, gridsize );
+
+      dataset = new DataSet( 
+                              group.createDataSet(  "mask", 
+                                                    PredType::NATIVE_INT, 
+                                                    maskspace ) 
+                          );
+      dataset ->      write(  mask -> data[ gridIndex ], 
+                              PredType::NATIVE_INT );
+
+      delete dataset;
+      /////////////////////////////////////////////////////////////////////////////////////
+    }
 
 
     file->close();
@@ -148,15 +183,13 @@ int sendToHDF5(   std::string   nameOfNewFile,
 
 
 
-int getFromHDF5(  aString       nameOfOGFile, 
-                  int           *numOfComponentGrids, 
-                  int           *numberOfDimensions,
-                  //int           *dim, 
-                  int           ***interior_box, 
-                  int           ***domain_box, 
-                  double        ****xy, 
-                  //int           ***mask,
-                  int           ***desc )
+int getFromHDF5(    aString         nameOfOGFile, 
+                    int             *numberOfComponentGrids, 
+                    int             *numberOfDimensions,
+                    Array3D<int>    *interior_box, 
+                    Array3D<int>    *domain_box, 
+                    Array4D<double> *xy,
+                    Array3D<int>    *desc )
 {   
   // Read in a CompositeGrid
   CompositeGrid compositeGrid;
@@ -166,21 +199,24 @@ int getFromHDF5(  aString       nameOfOGFile,
   /////////////////////////////////////////////////////////////////////////
 
   // initialize first dimension of grid data ///////////////////////////////////
-  *(numOfComponentGrids)  = compositeGrid.numberOfComponentGrids();
+  int numOfCompGrids    = compositeGrid.numberOfComponentGrids();
+  *numberOfComponentGrids  = numOfCompGrids;
 
-  interior_box            = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
-  domain_box              = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
-  xy                      = (double ****) malloc( sizeof(double***) * *(numOfComponentGrids) );
-  //mask                    = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
-  desc                    = (int    ***)  malloc( sizeof(int   **)  * *(numOfComponentGrids) );
+  int numOfDimensions   = compositeGrid.numberOfDimensions();
+  *numberOfDimensions   = numOfDimensions;
+
+
+  interior_box    ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
+  domain_box      ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
+  xy              ->    allocate( numOfCompGrids, 0, 0, 0,              -1, -1, -1 );
+  desc            ->    allocate( numOfCompGrids, 0, 0,                 -1, -1 );
   ///////////////////////////////////////////////////////////////////////////////
 
   
-  *(numberOfDimensions)   = compositeGrid.numberOfDimensions();
   
   const IntegerArray & ni = compositeGrid.numberOfInterpolationPoints;
   
-  for ( int gridIndex = 0; gridIndex < *(numOfComponentGrids); gridIndex++ )
+  for ( int gridIndex = 0; gridIndex < numOfCompGrids; gridIndex++ )
   {
     MappedGrid & grid = compositeGrid[ gridIndex ];
     grid.update( MappedGrid::THEvertex | MappedGrid::THEmask );  // create the vertex and mask arrays
@@ -220,46 +256,34 @@ int getFromHDF5(  aString       nameOfOGFile,
     int k  = vertexLocal.getBase( 3 );
 
 
-    interior_box[ gridIndex ]         = (int **) malloc( sizeof(int *) * 2 );
-    interior_box[ gridIndex ][ 0 ]    = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
-    interior_box[ gridIndex ][ 1 ]    = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
-
-    domain_box[ gridIndex ]           = (int **) malloc( sizeof(int *) * 2 );
-    domain_box[ gridIndex ][ 0 ]      = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
-    domain_box[ gridIndex ][ 1 ]      = (int *)  malloc( sizeof(int) * *(numberOfDimensions) );
-
     for ( int i = 0; i < 2; i++ )
     {
-      for ( int j = 0; j < *(numberOfDimensions); j++ )
+      for ( int j = 0; j < numOfDimensions; j++ )
       {
-        interior_box[ gridIndex ][ i ][ j ] = gridIndexRange( i, j ) - dim( 0, j );
-        domain_box  [ gridIndex ][ i ][ j ] = dim( i, j ) - dim( 0, j );
+        interior_box -> data[ gridIndex ][ i ][ j ] = gridIndexRange( i, j ) - dim( 0, j );
+        domain_box   -> data[ gridIndex ][ i ][ j ] = dim( i, j ) - dim( 0, j );
       }
     }
 
     // Note that k below is just 0, not a real loop index. Only one Z index.
-    desc[ gridIndex ]    = (int **)      malloc( sizeof(int   *)  * ( nx + 1 ) );
-    xy  [ gridIndex ]    = (double ***)  malloc( sizeof(double**) * ( nx + 1 ) );
+    desc  -> allocate( 0, ( nx + 1 ), ( ny + 1 ),                       gridIndex, -1 );
+    xy    -> allocate( 0, ( nx + 1 ), ( ny + 1 ), numOfDimensions,      gridIndex, -1, -1 );
     
     for( int i = 0; i < nx + 1; i++ )
     {
-      desc[ gridIndex ][ i ]   = (int *)       malloc( sizeof(int   *) * ( ny + 1 ) );
-      xy  [ gridIndex ][ i ]   = (double **)   malloc( sizeof(double*) * ( ny + 1 ) );
-
       for( int j = 0; j < ny + 1; j++ )
       {
-        desc[ gridIndex ][ i ][ j ]    = maskLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k ) >= 0 ? 0: 1;
-        xy  [ gridIndex ][ i ][ j ]    = (double *) malloc( sizeof(double) * *(numberOfDimensions) );
+        desc -> data[ gridIndex ][ i ][ j ]    = maskLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k ) >= 0 ? 0: 1;
 
-        for( int l = 0; l < *(numberOfDimensions); l++ )
+        for( int l = 0; l < numOfDimensions; l++ )
         {
-          xy[ gridIndex ][ i ][ j ][ l ] = vertexLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k + dim( 0, 2 ), l );
+          xy -> data[ gridIndex ][ i ][ j ][ l ] = vertexLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k + dim( 0, 2 ), l );
         }
 
       }
     }
-    std::cout << interior_box[ gridIndex ][ 0 ][ 0 ] << interior_box[ gridIndex ][ 0 ][ 1 ] 
-              << interior_box[ gridIndex ][ 1 ][ 0 ] << interior_box[ gridIndex ][ 1 ][ 1 ] 
+    std::cout << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << interior_box -> data[ gridIndex ][ 0 ][ 1 ] 
+              << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
               << std::endl;
 
     // destroy arrays to save space

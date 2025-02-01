@@ -3,13 +3,13 @@
 #include "inAndOut.h"
 
 
-int sendToTextFile( const char*   fileName,
-                    int           numOfComponentGrids, 
-                    int           dim, 
-                    int           ***interior_box, 
-                    int           ***domain_box, 
-                    double        ****xy, 
-                    int           ***mask )
+int sendToTextFile( const char*         fileName,
+                    int                 numOfComponentGrids, 
+                    int                 dimension, 
+                    Array3D<int>        *interior_box, 
+                    Array3D<int>        *domain_box, 
+                    Array4D<double>     *xy, 
+                    Array3D<int>        *mask )
 {
   std::ofstream   outputFile;
 
@@ -22,43 +22,44 @@ int sendToTextFile( const char*   fileName,
     std::exit( 1 );
   }
 
-  outputFile << dim << std::endl;
+  outputFile << numOfComponentGrids << std::endl;
+  outputFile << dimension << std::endl;
 
   for ( int gridIndex = 0; gridIndex < numOfComponentGrids; gridIndex++ )
   {
-    std::cout   << interior_box[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 0 ][ 1 ] << "\t" 
-                << interior_box[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 1 ][ 1 ] 
+    std::cout   << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 0 ][ 1 ] << "\t" 
+                << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
                 << std::endl;
 
-    outputFile  << interior_box[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 0 ][ 1 ] << "\t" 
-                << interior_box[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box[ gridIndex ][ 1 ][ 1 ] 
+    outputFile  << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 0 ][ 1 ] << "\t" 
+                << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
                 << std::endl;
         
-    outputFile  << domain_box[ gridIndex ][ 0 ][ 0 ] << "\t" << domain_box[ gridIndex ][ 0 ][ 1 ] << "\t" 
-                << domain_box[ gridIndex ][ 1 ][ 0 ] << "\t" << domain_box[ gridIndex ][ 1 ][ 1 ] 
+    outputFile  << domain_box -> data[ gridIndex ][ 0 ][ 0 ] << "\t" << domain_box -> data[ gridIndex ][ 0 ][ 1 ] << "\t" 
+                << domain_box -> data[ gridIndex ][ 1 ][ 0 ] << "\t" << domain_box -> data[ gridIndex ][ 1 ][ 1 ] 
                 << std::endl;
     
-    for ( int i = domain_box[ gridIndex ][ 0 ][ 0 ]; i <= domain_box[ gridIndex ][ 1 ][ 0 ]; i++ )
+    for ( int i = domain_box -> data[ gridIndex ][ 0 ][ 0 ]; i <= domain_box -> data[ gridIndex ][ 1 ][ 0 ]; i++ )
     {
-      for ( int j = domain_box[ gridIndex ][ 0 ][ 1 ]; j <= domain_box[ gridIndex ][ 1 ][ 1 ]; j++ )
+      for ( int j = domain_box -> data[ gridIndex ][ 0 ][ 1 ]; j <= domain_box -> data[ gridIndex ][ 1 ][ 1 ]; j++ )
       {
-        for ( int k = 0; k < dim; k++ )
+        for ( int k = 0; k < dimension; k++ )
         {
-          outputFile << xy[ gridIndex ][ i ][ j ][ k ] << "\t";
+          outputFile << xy -> data[ gridIndex ][ i ][ j ][ k ] << "\t";
         }
       }
     }
 
     outputFile << std::endl;
 
-    for ( int i = domain_box[ gridIndex ][ 0 ][ 0 ]; i <= domain_box[ gridIndex ][ 1 ][ 0 ]; i++ )
+    for ( int i = domain_box -> data[ gridIndex ][ 0 ][ 0 ]; i <= domain_box -> data[ gridIndex ][ 1 ][ 0 ]; i++ )
     {
-      for ( int j = domain_box[ gridIndex ][ 0 ][ 1 ]; j <= domain_box[ gridIndex ][ 1 ][ 1 ]; j++ )
+      for ( int j = domain_box -> data[ gridIndex ][ 0 ][ 1 ]; j <= domain_box -> data[ gridIndex ][ 1 ][ 1 ]; j++ )
       {
-        outputFile << mask[ gridIndex ][ i ][ j ] << "\t";
+        outputFile << mask -> data[ gridIndex ][ i ][ j ] << "\t";
       }
     }
-    outputFile << std::endl;
+    outputFile << "\n" << std::endl;
   }
 
   outputFile.close();
@@ -67,12 +68,13 @@ int sendToTextFile( const char*   fileName,
 }
 
 
-int getFromTextFile(  const char*   fileName, 
-                      int           *dim, 
-                      int           **interior_box, 
-                      int           **domain_box, 
-                      double        ***xy, 
-                      int           **mask )
+int getFromTextFile(  const char*         fileName,
+                      int                 numOfComponentGrids, 
+                      int                 dimension, 
+                      Array3D<int>        *interior_box, 
+                      Array3D<int>        *domain_box, 
+                      Array4D<double>     *xy, 
+                      Array3D<int>        *mask )
 {
   std::ifstream inFile;
 
@@ -83,64 +85,64 @@ int getFromTextFile(  const char*   fileName,
     std::exit( 1 );
   }
 
-  inFile >> *dim;
-  interior_box      = (int **) malloc( sizeof(int *) * 2 );
-  interior_box[0]   = (int *)  malloc( sizeof(int) * (*dim) );
-  interior_box[1]   = (int *)  malloc( sizeof(int) * (*dim) );
 
-  domain_box        = (int **) malloc( sizeof(int *) * 2 );
-  domain_box[0]     = (int *)  malloc( sizeof(int) * (*dim) );
-  domain_box[1]     = (int *)  malloc( sizeof(int) * (*dim) );
+  int numOfCompGrids   = 1;
 
-  for ( int i = 0; i < 2; i++ )
+  inFile >> numOfCompGrids;
+  inFile >> dimension;
+
+  interior_box      ->    allocate( numOfCompGrids, 2, dimension,         -1, -1 ); 
+  domain_box        ->    allocate( numOfCompGrids, 2, dimension,         -1, -1 );
+  xy                ->    allocate( numOfCompGrids, 0, 0, 0,              -1, -1, -1 );
+  mask              ->    allocate( numOfCompGrids, 0, 0,                 -1, -1 );
+
+  for ( int gridIndex = 0; gridIndex < 1; gridIndex++ )
   {
-    for ( int j = 0; j < *dim; j++ )
+
+    for ( int i = 0; i < 2; i++ )
     {
-      inFile >> interior_box[ i ][ j ];
-    }
-  }
-
-  for ( int i = 0; i < 2; i++ )
-  {
-    for ( int j = 0; j < *dim; j++ )
-    {
-      inFile >> domain_box[ i ][ j ];
-    }
-  }
-
-
-  int nx  =   domain_box[ 1 ][ 0 ] - domain_box[ 0 ][ 0 ];
-  int ny  =   domain_box[ 1 ][ 1 ] - domain_box[ 0 ][ 1 ];
-
-  xy = ( double *** ) malloc( sizeof(double) * ( nx + 1 ) );
-
-  double d;
-  for( int i = 0; i < nx + 1; i++ )
-  {
-    xy[ i ]   = (double **) malloc( sizeof(double*) * ( ny + 1 ) );
-
-    for( int j = 0; j < ny + 1; j++ )
-    {
-      xy[ i ][ j ] = (double *) malloc( sizeof(double) * (*dim) );
-
-      for( int k = 0; k < *dim; k++ )
+      for ( int j = 0; j < dimension; j++ )
       {
-        inFile >> d;
-        xy[ i ][ j ][ k ] = d;
+        inFile >> interior_box -> data[ gridIndex ][ i ][ j ];
       }
     }
-  }
 
-
-  mask = ( int **) malloc(  sizeof(double) * ( nx + 1 ) );
-
-  for( int i = 0; i < nx + 1; i++ )
-  {
-    mask[ i ] = (int *) malloc( sizeof(int) * ( ny + 1 ) );
-    
-    for( int j = 0; j < ny + 1; j++ )
+    for ( int i = 0; i < 2; i++ )
     {
-      inFile >> mask[ i ][ j ];
+      for ( int j = 0; j < dimension; j++ )
+      {
+        inFile >> domain_box -> data[ gridIndex ][ i ][ j ];
+      }
+    }
+
+
+    int nx  =   domain_box -> data[ gridIndex ][ 1 ][ 0 ] - domain_box -> data[ gridIndex ][ 0 ][ 0 ];
+    int ny  =   domain_box -> data[ gridIndex ][ 1 ][ 1 ] - domain_box -> data[ gridIndex ][ 0 ][ 1 ];
+
+    xy  -> allocate( 0, ( nx + 1 ), ( ny + 1 ), dimension,      gridIndex, -1, -1 );
+
+    double d;
+    for( int i = 0; i < nx + 1; i++ )
+    {
+      for( int j = 0; j < ny + 1; j++ )
+      {
+        for( int k = 0; k < dimension; k++ )
+        {
+          inFile >> d;
+          xy -> data[ gridIndex ][ i ][ j ][ k ] = d;
+        }
+      }
+    }
+
+
+    mask -> allocate( 0, ( nx + 1 ), ( ny + 1 ),        gridIndex, -1 );
+
+    for( int i = 0; i < nx + 1; i++ )
+    {
+      for( int j = 0; j < ny + 1; j++ )
+      {
+        inFile >> mask -> data[ gridIndex ][ i ][ j ];
+      }
     }
   }
 

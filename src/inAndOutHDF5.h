@@ -4,22 +4,25 @@
 #include "PlotStuff.h"
 #include "display.h"
 #include "ParallelUtility.h"
+
+#include "Array4D.h"
+#include "Array3D.h"
+
 #include <stdlib.h>
 
 
 int sendToHDF5(     std::string   filename,
-                    int           *spacedim,
-                    int           **interior_box,
-                    int           **domain_box,
-                    double        ***xy,
-                    int           **mask );
+                    int             *numOfComponentGrids, 
+                    int             *numberOfDimensions,
+                    Array3D<int>    *interior_box, 
+                    Array3D<int>    *domain_box, 
+                    Array4D<double> *xy,
+                    Array3D<int>    *desc );
 
-int getFromHDF5(    aString       fileName, 
-                    int           *numOfComponentGrids, 
-                    int           *numberOfDimensions,
-                    //int           *dim, 
-                    int           ***interior_box, 
-                    int           ***domain_box, 
-                    double        ****xy, 
-                    //int           **mask, 
-                    int           ***desc );
+int getFromHDF5(    aString         nameOfOGFile, 
+                    int             *numOfComponentGrids, 
+                    int             *numberOfDimensions,
+                    Array3D<int>    *interior_box, 
+                    Array3D<int>    *domain_box, 
+                    Array4D<double> *xy,
+                    Array3D<int>    *desc );

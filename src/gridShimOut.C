@@ -32,25 +32,31 @@ int main( int argc, char *argv[] )
     std::cerr << "Usage: gridShimOut gridName.in outfile.hdf " << std::endl;
   }
 
-  int     *dim;
-  int     **interior_box;
-  int     **domain_box;
-  double  ***xy;
-  int     **mask;
 
-  int status  =   getFromTextFile(  nameOfOGFile, 
-                                    dim, 
+  // Initialize grid data 
+  int                 numOfComponentGrids;
+  int                 numberOfDimensions;
+  // xy[ i ][ j ][ k ][ l ]: j -> x, k -> y, l -> z, i -> numOfComponentGrids
+  Array4D<double>     *xy              = new Array4D< double >();      
+  Array3D<int>        *interior_box    = new Array3D< int >();
+  Array3D<int>        *domain_box      = new Array3D< int >();
+  Array3D<int>        *desc            = new Array3D< int >();
+
+  int status  =   getFromTextFile(  nameOfOGFile,
+                                    &numOfComponentGrids,
+                                    &numberOfDimensions, 
                                     interior_box, 
                                     domain_box, 
                                     xy, 
-                                    mask );
+                                    desc );
 
-  status      =   sendToHDF5(       nameOfNewFile, 
-                                    dim, 
+  status      =   sendToHDF5(       saveLocation, 
+                                    numOfComponentGrids,
+                                    numberOfDimensions, 
                                     interior_box, 
                                     domain_box, 
                                     xy, 
-                                    mask );
+                                    desc );
   
   return 0;
 }
