@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch Shim",
+            "name": "(gdb) Launch Shim In",
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/overture/OvertureShim/src/gridShimIn",
@@ -37,6 +37,42 @@
             "sourceFileMap": 
             {
                 "/home/user/OvertureShim/src/file": "/home/overture/OvertureShim/src/gridShimIn.o"
+            },
+
+        },
+        {
+            "name": "(gdb) Launch Shim Out",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/overture/OvertureShim/src/gridShimOut",
+            "args": 
+            [
+                "/home/overture/OvertureShim/textOutput/debugTest.txt", 
+                "sqrInSqr2_hyde.hdf"
+            ],
+            "stopAtEntry": false,
+            "justMyCode": false,
+            "cwd": "/home/overture/OvertureShim",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": 
+            [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",  // Optional: explicitly set if GDB is not on PATH
+            "sourceFileMap": 
+            {
+                "/home/user/OvertureShim/src/file": "/home/overture/OvertureShim/src/gridShimOut.o"
             },
 
         }

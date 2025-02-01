@@ -242,9 +242,6 @@ gridGenExample = gridGenExample.o
 gridGenExample: $(gridGenExample) 
 	$(CC) $(CCFLAGS) -o gridGenExample $(gridGenExample) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-inAndOutHDF5.o: inAndOutHDF5.C
-	$(CC) $(CCFLAGS) -c inAndOutHDF5.C -o inAndOutHDF5.o
-
 gridPrint := gridPrint.o
 gridPrint: $(gridPrint)
 	$(CC) $(CCFLAGS) -o gridPrint $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)

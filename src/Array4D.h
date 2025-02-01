@@ -28,7 +28,7 @@ struct Array4D
              ( d1 == 0 && d2 == 0 && d3 == 0 && d4 == 0 ) ) 
         {
             std::cerr << "Invalid dimensions for allocation: " << d1 << ", " << d2 << ", " << d3 << ", " << d4 << std::endl;
-            return;
+            std::exit( 1 );
         }
 
         if ( d1 > 0 )

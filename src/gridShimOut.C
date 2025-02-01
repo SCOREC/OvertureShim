@@ -8,29 +8,65 @@
 //     mpirun -np 2 gridShim cic.hdf cic.out
 // ==================================================================================
 
+#include "Overture.h"  
+#include "PlotStuff.h"
+#include "display.h"
+#include "ParallelUtility.h"
+
 #include "inAndOutHDF5.h"
 #include "inAndOut.h"
 
 #include <stdlib.h>
 #include <iostream>
-#include <string>
+
+
+int getFileNameData(    int             argc, 
+                        char            *argv[], 
+                        const char*     &nameOfOGFile, 
+                        const char*     &nameOfNewFile,
+                        char            saveLocation[] )
+{
+    ///////////////////////////////////////////////////////////////////////////
+    // Preperations for accessing and saving files ////////////////////////////
+    if( argc == 3 )                                                  //////////                    
+    {                                                                //////////
+        nameOfOGFile    = argv[1];                                   //////////
+        nameOfNewFile   = argv[2];                                   //////////
+    }                                                                //////////                           
+    else                                                             //////////
+    {                                                                //////////
+        std::cerr << "Usage: gridShimOut gridName.in outfile.hdf \n" << std::endl;   //////////
+    }                                                                //////////
+                                                                     //////////
+    const char *fileDir = "/home/overture/OvertureShim/hydeGrids/"; //////////
+                                                                     //////////
+    strcpy( saveLocation, fileDir );                                 //////////
+    strcat( saveLocation, nameOfNewFile );                           //////////
+    //strcat( saveLocation, ".txt" );                                //////////
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    return 0;
+}
 
 
 int main( int argc, char *argv[] )
 {
+  printF( " Usage: gridShimOut gridName.in outfile.hdf \n" );
 
-  std::string   nameOfNewFile;
-  const char*   nameOfOGFile;
+  /////////////////////////////////////////////////////////////////////////
+  // Retrieve file names and save location ////////////////////////////////
+  const char*     nameOfNewFile;
+  const char*     nameOfOGFile;
+  char            saveLocation[100];
 
-  if( argc == 3 )
-  {
-    nameOfOGFile  = argv[ 1 ];
-    nameOfNewFile    = argv[ 2 ];
-  }
-  else
-  {
-    std::cerr << "Usage: gridShimOut gridName.in outfile.hdf " << std::endl;
-  }
+  getFileNameData(    argc, 
+                      argv, 
+                      nameOfOGFile, 
+                      nameOfNewFile,
+                      saveLocation );
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 
   // Initialize grid data 
@@ -58,5 +94,8 @@ int main( int argc, char *argv[] )
                                     xy, 
                                     desc );
   
+
+  printF( "Output written to file %s\n", nameOfNewFile );
+
   return 0;
 }

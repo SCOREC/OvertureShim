@@ -69,8 +69,8 @@ int sendToTextFile( const char*         fileName,
 
 
 int getFromTextFile(  const char*         fileName,
-                      int                 numOfComponentGrids, 
-                      int                 dimension, 
+                      int                 *numOfComponentGrids, 
+                      int                 *dimension, 
                       Array3D<int>        *interior_box, 
                       Array3D<int>        *domain_box, 
                       Array4D<double>     *xy, 
@@ -86,22 +86,26 @@ int getFromTextFile(  const char*         fileName,
   }
 
 
-  int numOfCompGrids   = 1;
+  int numOfCompGrids, dim;
 
-  inFile >> numOfCompGrids;
-  inFile >> dimension;
+  inFile                >> numOfCompGrids;
+  *numOfComponentGrids  =  numOfCompGrids;
 
-  interior_box      ->    allocate( numOfCompGrids, 2, dimension,         -1, -1 ); 
-  domain_box        ->    allocate( numOfCompGrids, 2, dimension,         -1, -1 );
-  xy                ->    allocate( numOfCompGrids, 0, 0, 0,              -1, -1, -1 );
-  mask              ->    allocate( numOfCompGrids, 0, 0,                 -1, -1 );
+  inFile                >> dim;
+  *dimension            =  dim;
 
-  for ( int gridIndex = 0; gridIndex < 1; gridIndex++ )
+
+  interior_box      ->    allocate( numOfCompGrids, 2, dim,         -1, -1 ); 
+  domain_box        ->    allocate( numOfCompGrids, 2, dim,         -1, -1 );
+  xy                ->    allocate( numOfCompGrids, 0, 0, 0,        -1, -1, -1 );
+  mask              ->    allocate( numOfCompGrids, 0, 0,           -1, -1 );
+
+  for ( int gridIndex = 0; gridIndex < numOfCompGrids; gridIndex++ )
   {
 
     for ( int i = 0; i < 2; i++ )
     {
-      for ( int j = 0; j < dimension; j++ )
+      for ( int j = 0; j < dim; j++ )
       {
         inFile >> interior_box -> data[ gridIndex ][ i ][ j ];
       }
@@ -109,7 +113,7 @@ int getFromTextFile(  const char*         fileName,
 
     for ( int i = 0; i < 2; i++ )
     {
-      for ( int j = 0; j < dimension; j++ )
+      for ( int j = 0; j < dim; j++ )
       {
         inFile >> domain_box -> data[ gridIndex ][ i ][ j ];
       }
@@ -119,14 +123,14 @@ int getFromTextFile(  const char*         fileName,
     int nx  =   domain_box -> data[ gridIndex ][ 1 ][ 0 ] - domain_box -> data[ gridIndex ][ 0 ][ 0 ];
     int ny  =   domain_box -> data[ gridIndex ][ 1 ][ 1 ] - domain_box -> data[ gridIndex ][ 0 ][ 1 ];
 
-    xy  -> allocate( 0, ( nx + 1 ), ( ny + 1 ), dimension,      gridIndex, -1, -1 );
+    xy  -> allocate( 0, ( nx + 1 ), ( ny + 1 ), dim,      gridIndex, -1, -1 );
 
     double d;
     for( int i = 0; i < nx + 1; i++ )
     {
       for( int j = 0; j < ny + 1; j++ )
       {
-        for( int k = 0; k < dimension; k++ )
+        for( int k = 0; k < dim; k++ )
         {
           inFile >> d;
           xy -> data[ gridIndex ][ i ][ j ][ k ] = d;

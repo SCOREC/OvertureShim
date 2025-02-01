@@ -12,8 +12,8 @@
 
 
 int sendToHDF5(     std::string   filename,
-                    int             *numOfComponentGrids, 
-                    int             *numberOfDimensions,
+                    int             numOfComponentGrids, 
+                    int             numberOfDimensions,
                     Array3D<int>    *interior_box, 
                     Array3D<int>    *domain_box, 
                     Array4D<double> *xy,

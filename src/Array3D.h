@@ -29,7 +29,7 @@ struct Array3D
                 ( d1 == 0 && d2 == 0 && d3 == 0 ) ) 
         {
             std::cerr << "Invalid dimensions for allocation: " << d1 << ", " << d2 << ", " << d3 << std::endl;
-            return;
+            std::exit( 1 );
         }
 
         // Positive d1, d2, d3 indicate which dimension is being set

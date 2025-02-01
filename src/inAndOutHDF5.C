@@ -30,12 +30,12 @@ using namespace H5;
 
 
 int sendToHDF5(   std::string     nameOfNewFile,
-                  int             *numberOfComponentGrids, 
-                  int             *numberOfDimensions,
+                  int             numberOfComponentGrids, 
+                  int             numberOfDimensions,
                   Array3D<int>    *interior_box, 
                   Array3D<int>    *domain_box, 
                   Array4D<double> *xy,
-                  Array3D<int>    *desc )
+                  Array3D<int>    *mask )
 {
   try
   {
@@ -53,14 +53,14 @@ int sendToHDF5(   std::string     nameOfNewFile,
     ////////////////////////////////////////////////////////////////////////////////////////
     // Set dimensions //////////////////////////////////////////////////////////////////////
     hsize_t     dimsize[] = {1};
-    DataSpace   fspace( 1, dimsize );
+    DataSpace   dimSpace( 1, dimsize );
 
     dataset = new DataSet( 
                             compGridGroup.createDataSet(  "dim", 
                                                           PredType::NATIVE_INT, 
-                                                          fspace ) 
+                                                          dimSpace ) 
                     );
-    dataset ->      write(  numberOfDimensions, 
+    dataset ->      write(  &numberOfDimensions, 
                             PredType::NATIVE_INT );
 
     delete dataset;
@@ -72,14 +72,14 @@ int sendToHDF5(   std::string     nameOfNewFile,
     // Set numberOfComponentGrids ///////////////////////////////////////////////////////
     
     hsize_t     numOfGridsIntSize[] = {1};
-    DataSpace   fspace( 1, numOfGridsIntSize );
+    DataSpace   numGridSpace( 1, numOfGridsIntSize );
 
     dataset = new DataSet( 
                             compGridGroup.createDataSet(  "num_of_component_grids", 
                                                           PredType::NATIVE_INT, 
-                                                          fspace ) 
+                                                          numGridSpace ) 
                     );
-    dataset ->      write(  numberOfComponentGrids, 
+    dataset ->      write(  &numberOfComponentGrids, 
                             PredType::NATIVE_INT );
 
     delete dataset;
@@ -87,7 +87,7 @@ int sendToHDF5(   std::string     nameOfNewFile,
     ////////////////////////////////////////////////////////////////////////////////////////
 
 
-    for ( int gridIndex = 0; gridIndex < *numberOfComponentGrids; gridIndex++ )
+    for ( int gridIndex = 0; gridIndex < numberOfComponentGrids; gridIndex++ )
     {
       // Create a grid group in the file.
       Group group( compGridGroup.createGroup( "grid" + std::to_string( gridIndex ) ) );
@@ -121,13 +121,13 @@ int sendToHDF5(   std::string     nameOfNewFile,
       /////////////////////////////////////////////////////////////////////////////////////
 
       // Set xy ///////////////////////////////////////////////////////
-      int nx = domain_box[ 1 ][ 0 ] - domain_box[ 0 ][ 0 ];
-      int ny = domain_box[ 1 ][ 1 ] - domain_box[ 0 ][ 1 ];
+      int nx = domain_box -> data[ 1 ][ 0 ] - domain_box -> data[ 0 ][ 0 ];
+      int ny = domain_box -> data[ 1 ][ 1 ] - domain_box -> data[ 0 ][ 1 ];
       
       hsize_t   gridsize[] = {  static_cast<hsize_t>(nx + 1), 
                                 static_cast<hsize_t>(ny + 1), 
                                 2 };
-      DataSpace xyspace(  ( *numberOfDimensions ) + 1, 
+      DataSpace xyspace(  ( numberOfDimensions ) + 1, 
                           gridsize );
       
       dataset = new DataSet( 
