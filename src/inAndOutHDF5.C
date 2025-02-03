@@ -64,12 +64,12 @@ int sendToHDF5(   std::string     nameOfNewFile,
                             PredType::NATIVE_INT );
 
     delete dataset;
-    /////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////
     
 
     ////////////////////////////////////////////////////////////////////////////////////////
-    // Set numberOfComponentGrids ///////////////////////////////////////////////////////
+    // Set numberOfComponentGrids //////////////////////////////////////////////////////////
     
     hsize_t     numOfGridsIntSize[] = {1};
     DataSpace   numGridSpace( 1, numOfGridsIntSize );
@@ -83,76 +83,138 @@ int sendToHDF5(   std::string     nameOfNewFile,
                             PredType::NATIVE_INT );
 
     delete dataset;
-    /////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////
 
 
     for ( int gridIndex = 0; gridIndex < numberOfComponentGrids; gridIndex++ )
     {
       // Create a grid group in the file.
-      Group group( compGridGroup.createGroup( "grid" + std::to_string( gridIndex ) ) );
+      Group group( compGridGroup.createGroup( "grid_" + std::to_string( gridIndex ) ) );
 
 
-      // Set interior box ///////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////
+      // Set interior box /////////////////////////////////////////////////////////////////
       hsize_t     boxsize[] = {2, 2};
       DataSpace   boxspace( 2, boxsize );
+
+      // Not sure why this is needed for now...
+      int interior_box_Placeholder[2][2];
+      for ( int i = 0; i < 2; i++ )
+      {
+        for ( int j = 0; j < numberOfDimensions; j++ )
+        {
+          interior_box_Placeholder[ i ][ j ] = interior_box -> data[ gridIndex ][ i ][ j ];
+        }
+      }
 
       dataset = new DataSet( 
                               group.createDataSet(  "interior_box", 
                                                     PredType::NATIVE_INT, 
                                                     boxspace ) 
                           );
-      dataset ->      write(  interior_box -> data[ gridIndex ], 
+      dataset ->      write(  &interior_box_Placeholder , 
                               PredType::NATIVE_INT );
 
       delete dataset;
       /////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////
 
-      // Set domain box ///////////////////////////////////////////////////////
+
+      /////////////////////////////////////////////////////////////////////////////////////
+      // Set domain box ///////////////////////////////////////////////////////////////////
+
+      // Not sure why this is needed for now...
+      int domain_box_Placeholder[2][2];
+      for ( int i = 0; i < 2; i++ )
+      {
+        for ( int j = 0; j < numberOfDimensions; j++ )
+        {
+          domain_box_Placeholder[ i ][ j ] = domain_box -> data[ gridIndex ][ i ][ j ];
+        }
+      }
+
       dataset = new DataSet( 
                               group.createDataSet(  "domain_box", 
                                                     PredType::NATIVE_INT, 
                                                     boxspace ) 
                           );
-      dataset ->      write(  domain_box -> data[ gridIndex ], 
+      dataset ->      write(  &domain_box_Placeholder, 
                               PredType::NATIVE_INT );
 
       delete dataset;
       /////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////
 
-      // Set xy ///////////////////////////////////////////////////////
-      int nx = domain_box -> data[ 1 ][ 0 ] - domain_box -> data[ 0 ][ 0 ];
-      int ny = domain_box -> data[ 1 ][ 1 ] - domain_box -> data[ 0 ][ 1 ];
+
+      /////////////////////////////////////////////////////////////////////////////////////
+      // Set xy ///////////////////////////////////////////////////////////////////////////
+      int nx  =   domain_box -> data[ gridIndex ][ 1 ][ 0 ] - domain_box -> data[ gridIndex ][ 0 ][ 0 ];
+      int ny  =   domain_box -> data[ gridIndex ][ 1 ][ 1 ] - domain_box -> data[ gridIndex ][ 0 ][ 1 ];
       
-      hsize_t   gridsize[] = {  static_cast<hsize_t>(nx + 1), 
-                                static_cast<hsize_t>(ny + 1), 
-                                2 };
+      hsize_t   gridsize1[] = {   static_cast<hsize_t> ( nx + 1 ), 
+                                  static_cast<hsize_t> ( ny + 1 ), 
+                                  static_cast<hsize_t> ( numberOfDimensions ) };
       DataSpace xyspace(  ( numberOfDimensions ) + 1, 
-                          gridsize );
+                          gridsize1 );
       
       dataset = new DataSet( 
                               group.createDataSet(  "xy", 
                                                     PredType::NATIVE_DOUBLE, 
                                                     xyspace ) 
                           );
-      dataset ->      write(  xy -> data[ gridIndex ], 
+
+      // Not sure why this is needed for now...
+      double xy_Placeholder[ nx + 1 ][ ny + 1 ][ numberOfDimensions ];
+
+      for( int i = 0; i < nx + 1; i++ )
+      {
+        for( int j = 0; j < ny + 1; j++ )
+        {
+          for( int k = 0; k < numberOfDimensions; k++ )
+          {
+            xy_Placeholder[ i ][ j ][ k ] = xy -> data[ gridIndex ][ i ][ j ][ k ];
+          }
+        }
+      }
+
+      dataset ->      write(  &xy_Placeholder, 
                               PredType::NATIVE_DOUBLE );
 
       delete dataset;
       /////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////
 
-      // Set mask ///////////////////////////////////////////////////////////////
-      DataSpace   maskspace( 2, gridsize );
+
+      /////////////////////////////////////////////////////////////////////////////////////
+      // Set mask /////////////////////////////////////////////////////////////////////////
+      hsize_t   gridsize2[] = {  static_cast<hsize_t>(nx + 1), 
+                                 static_cast<hsize_t>(ny + 1) };
+
+      DataSpace   maskspace( 2, gridsize2 );
 
       dataset = new DataSet( 
                               group.createDataSet(  "mask", 
                                                     PredType::NATIVE_INT, 
                                                     maskspace ) 
                           );
-      dataset ->      write(  mask -> data[ gridIndex ], 
+
+      // Not sure why this is needed for now...
+      int mask_Placeholder[ nx + 1 ][ ny + 1 ];
+
+      for( int i = 0; i < nx + 1; i++ )
+      {
+        for( int j = 0; j < ny + 1; j++ )
+        {
+          mask_Placeholder[ i ][ j ] = mask -> data[ gridIndex ][ i ][ j ];
+        }
+      }
+
+      dataset ->      write(  &mask_Placeholder, 
                               PredType::NATIVE_INT );
 
       delete dataset;
+      /////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////
     }
 
@@ -193,35 +255,36 @@ int getFromHDF5(    aString         nameOfOGFile,
 {   
   // Read in a CompositeGrid
   CompositeGrid compositeGrid;
-  //aString nameOfOGFile;
   getFromADataBase( compositeGrid, nameOfOGFile );
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
 
-  // initialize first dimension of grid data ///////////////////////////////////
+
+  /////////////////////////////////////////////////////////////////////////////////
+  // Initialize number of component grids and dimension of grid data /////////////
   int numOfCompGrids    = compositeGrid.numberOfComponentGrids();
   *numberOfComponentGrids  = numOfCompGrids;
 
   int numOfDimensions   = compositeGrid.numberOfDimensions();
   *numberOfDimensions   = numOfDimensions;
 
-
+  // Allocate space where possible for grid data
   interior_box    ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
   domain_box      ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
   xy              ->    allocate( numOfCompGrids, 0, 0, 0,              -1, -1, -1 );
   desc            ->    allocate( numOfCompGrids, 0, 0,                 -1, -1 );
-  ///////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////
 
   
-  
+  // Get number of interp pts from CompositeGrid
   const IntegerArray & ni = compositeGrid.numberOfInterpolationPoints;
   
   for ( int gridIndex = 0; gridIndex < numOfCompGrids; gridIndex++ )
   {
+    // Utilize Overture methods to easily retrieve data
     MappedGrid & grid = compositeGrid[ gridIndex ];
     grid.update( MappedGrid::THEvertex | MappedGrid::THEmask );  // create the vertex and mask arrays
 
-    const IntegerArray & dim            = grid.dimension();
+    const IntegerArray & gridDimensions = grid.dimension();          // grid array dimensions
     const IntegerArray & gridIndexRange = grid.gridIndexRange();
     const IntegerArray & bc             = grid.boundaryCondition();  // unused for now
 
@@ -232,15 +295,14 @@ int getFromHDF5(    aString         nameOfOGFile,
             "%i %i %i %i %i %i ( boundaryCondition(0:1,0:2) )\n"
             "%i %i %i          ( isPeriodic(0:2), 0 = not, 1 = deriv, 2 = function )\n",
             gridIndex             , (const char*)grid.getName(),
-            dim( 0, 0 )           , dim( 1, 0 )           , dim( 0, 1 ), 
-            dim( 1, 1 )           , dim( 0, 2 )           , dim( 1, 2 ),
+            gridDimensions( 0, 0 ), gridDimensions( 1, 0 ), gridDimensions( 0, 1 ), 
+            gridDimensions( 1, 1 ), gridDimensions( 0, 2 ), gridDimensions( 1, 2 ),
             gridIndexRange( 0, 0 ), gridIndexRange( 1, 0 ), gridIndexRange( 0, 1 ), 
             gridIndexRange( 1, 1 ), gridIndexRange( 0, 2 ), gridIndexRange( 1, 2 ),
             bc( 0, 0 ), bc( 1, 0 ), bc( 0, 1 ), bc( 1, 1 ), bc( 0, 2 ), bc( 1, 2 ),
             grid.isPeriodic(0)    , grid.isPeriodic(1)    , grid.isPeriodic(2) );
     
     
-
     const intArray & mask = grid.mask();
     intSerialArray maskLocal; 
 
@@ -250,22 +312,36 @@ int getFromHDF5(    aString         nameOfOGFile,
     realSerialArray vertexLocal; 
 
     // local array on this processor
-    getLocalArrayWithGhostBoundaries( vertex, vertexLocal );          
-    int nx = dim( 1, 0 ) - dim( 0, 0 );
-    int ny = dim( 1, 1 ) - dim( 0, 1 );
-    int k  = vertexLocal.getBase( 3 );
+    getLocalArrayWithGhostBoundaries( vertex, vertexLocal );   
+    // Note that k below is just 0, not a real loop index. Only one Z index.
+    int k       = vertexLocal.getBase( 3 );
 
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Set interior_box and domain_box /////////////////////////////////////////////////////////////////
     for ( int i = 0; i < 2; i++ )
     {
       for ( int j = 0; j < numOfDimensions; j++ )
       {
-        interior_box -> data[ gridIndex ][ i ][ j ] = gridIndexRange( i, j ) - dim( 0, j );
-        domain_box   -> data[ gridIndex ][ i ][ j ] = dim( i, j ) - dim( 0, j );
+        interior_box -> data[ gridIndex ][ i ][ j ] = gridIndexRange( i, j ) - gridDimensions( 0, j );
+        domain_box   -> data[ gridIndex ][ i ][ j ] = gridDimensions( i, j ) - gridDimensions( 0, j );
       }
     }
+    
+    // Print interior_box for verification
+    std::cout << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << interior_box -> data[ gridIndex ][ 0 ][ 1 ] 
+              << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
+              << std::endl;
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Note that k below is just 0, not a real loop index. Only one Z index.
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Set desc, xy, and mask //////////////////////////////////////////////////////////////////////////////
+    int nx      = gridDimensions( 1, 0 ) - gridDimensions( 0, 0 );
+    int ny      = gridDimensions( 1, 1 ) - gridDimensions( 0, 1 );
+
+    // Allocate space for gridIndex'th grid in desc and xy
     desc  -> allocate( 0, ( nx + 1 ), ( ny + 1 ),                       gridIndex, -1 );
     xy    -> allocate( 0, ( nx + 1 ), ( ny + 1 ), numOfDimensions,      gridIndex, -1, -1 );
     
@@ -273,18 +349,22 @@ int getFromHDF5(    aString         nameOfOGFile,
     {
       for( int j = 0; j < ny + 1; j++ )
       {
-        desc -> data[ gridIndex ][ i ][ j ]    = maskLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k ) >= 0 ? 0: 1;
+        desc -> data[ gridIndex ][ i ][ j ]   = maskLocal(  i + gridDimensions( 0, 0 ), 
+                                                            j + gridDimensions( 0, 1 ), 
+                                                            k ) >= 0 ? -1: 1;
 
         for( int l = 0; l < numOfDimensions; l++ )
         {
-          xy -> data[ gridIndex ][ i ][ j ][ l ] = vertexLocal( i + dim( 0, 0 ), j + dim( 0, 1 ), k + dim( 0, 2 ), l );
+          xy -> data[ gridIndex ][ i ][ j ][ l ]  = vertexLocal(  i + gridDimensions( 0, 0 ), 
+                                                                  j + gridDimensions( 0, 1 ), 
+                                                                  k + gridDimensions( 0, 2 ), l );
         }
 
       }
     }
-    std::cout << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << interior_box -> data[ gridIndex ][ 0 ][ 1 ] 
-              << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
-              << std::endl;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    
 
     // destroy arrays to save space
     grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  

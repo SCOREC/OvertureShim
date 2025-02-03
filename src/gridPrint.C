@@ -200,7 +200,7 @@ int main( int argc,  char *argv[] )
         int m = maskLocal( i1, i2, i3 );
         if(  m < 0  ) 
           m = -1;   // interpolation point 
-        else if(  m>0  ) 
+        else if(  m > 0  ) 
           m = 1;    // discretization point 
         fprintf( file, "%i ", m );
       }

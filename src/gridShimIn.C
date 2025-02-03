@@ -91,9 +91,9 @@ int main( int argc, char *argv[] )
     int                 numOfComponentGrids;
     int                 numberOfDimensions;
     // xy[ i ][ j ][ k ][ l ]: j -> x, k -> y, l -> z, i -> numOfComponentGrids
-    Array4D<double>     *xy              = new Array4D< double >();      
-    Array3D<int>        *interior_box    = new Array3D< int >();
-    Array3D<int>        *domain_box      = new Array3D< int >();
+    Array4D<double>     *xy              = new Array4D< double >();
+    Array3D<int>        *interior_box    = new Array3D< int >();    // Indices of interior points
+    Array3D<int>        *domain_box      = new Array3D< int >();    // Indices of all points including ghost points
     Array3D<int>        *desc            = new Array3D< int >();
     
     // Read in a CompositeGrid data
