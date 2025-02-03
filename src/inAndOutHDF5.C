@@ -245,7 +245,7 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 
 
-int getFromHDF5(    aString         nameOfOGFile, 
+int getFromHDF5(    const char*     fileName, 
                     int             *numberOfComponentGrids, 
                     int             *numberOfDimensions,
                     Array3D<int>    *interior_box, 
@@ -254,17 +254,18 @@ int getFromHDF5(    aString         nameOfOGFile,
                     Array3D<int>    *desc )
 {   
   // Read in a CompositeGrid
-  CompositeGrid compositeGrid;
+  aString nameOfOGFile      = fileName;
+  CompositeGrid             compositeGrid;
   getFromADataBase( compositeGrid, nameOfOGFile );
 
 
   /////////////////////////////////////////////////////////////////////////////////
   // Initialize number of component grids and dimension of grid data /////////////
-  int numOfCompGrids    = compositeGrid.numberOfComponentGrids();
-  *numberOfComponentGrids  = numOfCompGrids;
+  int numOfCompGrids        = compositeGrid.numberOfComponentGrids();
+  *numberOfComponentGrids   = numOfCompGrids;
 
-  int numOfDimensions   = compositeGrid.numberOfDimensions();
-  *numberOfDimensions   = numOfDimensions;
+  int numOfDimensions       = compositeGrid.numberOfDimensions();
+  *numberOfDimensions       = numOfDimensions;
 
   // Allocate space where possible for grid data
   interior_box    ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );

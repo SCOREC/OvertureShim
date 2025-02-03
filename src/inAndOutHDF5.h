@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 
-int sendToHDF5(     std::string   filename,
+int sendToHDF5(     std::string     filename,
                     int             numOfComponentGrids, 
                     int             numberOfDimensions,
                     Array3D<int>    *interior_box, 
@@ -19,7 +19,7 @@ int sendToHDF5(     std::string   filename,
                     Array4D<double> *xy,
                     Array3D<int>    *desc );
 
-int getFromHDF5(    aString         nameOfOGFile, 
+int getFromHDF5(    const char*     filename, 
                     int             *numOfComponentGrids, 
                     int             *numberOfDimensions,
                     Array3D<int>    *interior_box, 

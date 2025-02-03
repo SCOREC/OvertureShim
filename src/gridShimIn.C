@@ -8,15 +8,11 @@
 //     mpirun -np 2 gridShimIn cic.hdf cic.out
 // ==================================================================================
 
-#include "Overture.h"  
-#include "PlotStuff.h"
-#include "display.h"
-#include "ParallelUtility.h"
-
 #include "inAndOut.h"
 #include "inAndOutHDF5.h"
 
 #include <stdlib.h>
+#include <iostream>
 
 
 int startOverture( int argc, char *argv[] )
@@ -33,29 +29,71 @@ int startOverture( int argc, char *argv[] )
 }
 
 
+std::string getFileExtension(  const char*     fileName )
+{
+    std::string       fileNameStr( fileName );
+    size_t pos      = fileNameStr.find_last_of( "." );
+
+    if ( pos == std::string::npos ) 
+    {
+        printF( "Missing: file extension \n" ); 
+        Overture::abort( "error" );  
+    }                                                             
+
+    return fileNameStr.substr( pos + 1 );
+}
+
+
 int getFileNameData(    int             argc, 
                         char            *argv[], 
-                        aString         &nameOfOGFile, 
-                        const char*     &nameOfNewFile,
+                        const char**    nameOfOGFile, 
+                        const char**    nameOfNewFile,
+                        std::string*    ogFileExtension,
+                        std::string*    newFileExtension,       
                         char            saveLocation[] )
 {
     ///////////////////////////////////////////////////////////////////////////
     // Preperations for accessing and saving files ////////////////////////////
     if( argc == 3 )                                                  //////////                    
     {                                                                //////////
-        nameOfOGFile    = argv[1];                                   //////////
-        nameOfNewFile   = argv[2];                                   //////////
+        *nameOfOGFile    = argv[1];                                   //////////
+        *nameOfNewFile   = argv[2];                                   //////////
     }                                                                //////////                           
     else                                                             //////////
     {                                                                //////////
         printF( "Usage: gridShimIn gridName.hdf outfile.hdf \n" );   //////////
         Overture::abort( "error" );                                  //////////
     }                                                                //////////
+
+
+    // Get file extensions
+    *ogFileExtension     = getFileExtension( *nameOfOGFile );
+
+    *newFileExtension    = getFileExtension( *nameOfNewFile );
+
+
+    const char *fileDir;
                                                                      //////////
-    const char *fileDir = "/home/overture/OvertureShim/textOutput/"; //////////
+    if      ( *newFileExtension == "hdf" )                           //////////
+    {                                                                //////////
+        printF( "Reading from hdf file: %s \n", *nameOfOGFile );     //////////
+        fileDir = "/home/overture/OvertureShim/hydeGrids/";        //////////
+    }                                                                //////////
+    else if ( *newFileExtension == "txt" )                             //////////
+    {                                                                //////////
+        printF( "Reading from txt file: %s \n", *nameOfOGFile );     //////////
+        fileDir = "/home/overture/OvertureShim/textOutput/";        //////////
+    }   
+    else                                                             //////////
+    {                                                                //////////
+        printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfOGFile );   //////////
+        Overture::abort( "error" );                                  //////////
+    }                                                                //////////
+
+                                                                     //////////
                                                                      //////////
     strcpy( saveLocation, fileDir );                                 //////////
-    strcat( saveLocation, nameOfNewFile );                           //////////
+    strcat( saveLocation, *nameOfNewFile );                           //////////
     //strcat( saveLocation, ".txt" );                                //////////
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
@@ -74,14 +112,20 @@ int main( int argc, char *argv[] )
 
     /////////////////////////////////////////////////////////////////////////
     // Retrieve file names and save location ////////////////////////////////
-    aString         nameOfOGFile;
-    const char      *nameOfNewFile;
+    const char*     nameOfOGFile    = NULL;
+    const char*     nameOfNewFile   = NULL;
+
+    std::string*    ogFileExtension     = new std::string;
+    std::string*    newFileExtension    = new std::string;
+
     char            saveLocation[100];
 
     getFileNameData(    argc, 
                         argv, 
-                        nameOfOGFile, 
-                        nameOfNewFile,
+                        &nameOfOGFile, 
+                        &nameOfNewFile,
+                        ogFileExtension,
+                        newFileExtension,
                         saveLocation );
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -96,23 +140,71 @@ int main( int argc, char *argv[] )
     Array3D<int>        *domain_box      = new Array3D< int >();    // Indices of all points including ghost points
     Array3D<int>        *desc            = new Array3D< int >();
     
-    // Read in a CompositeGrid data
-    int status = getFromHDF5(       nameOfOGFile,
-                                    &numOfComponentGrids,
-                                    &numberOfDimensions, 
-                                    interior_box, 
-                                    domain_box, 
-                                    xy, 
-                                    desc );
 
-    // Write grid data to text file
-    status     = sendToTextFile(    saveLocation, 
-                                    numOfComponentGrids,
-                                    numberOfDimensions, 
-                                    interior_box, 
-                                    domain_box, 
-                                    xy, 
-                                    desc );
+    ////////////////////////////////////////////////////////////////////////////////
+    // Read grid data from file ////////////////////////////////////////////////////
+    if ( *ogFileExtension == "hdf" )
+    {
+        // Read in a CompositeGrid data from hdf file
+        int status = getFromHDF5(       nameOfOGFile,
+                                        &numOfComponentGrids,
+                                        &numberOfDimensions, 
+                                        interior_box, 
+                                        domain_box, 
+                                        xy, 
+                                        desc );
+    }
+    else if ( *ogFileExtension == "txt" )
+    {
+        // Read in a CompositeGrid data from txt file
+        int status = getFromTextFile(   nameOfOGFile,
+                                        &numOfComponentGrids,
+                                        &numberOfDimensions, 
+                                        interior_box, 
+                                        domain_box, 
+                                        xy, 
+                                        desc );
+    }
+    else
+    {
+        printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfOGFile );
+        Overture::abort( "error" );
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Write grid data to file /////////////////////////////////////////////////////
+    if ( *newFileExtension == "hdf" )
+    {
+        // Write grid data to hdf file
+        sendToHDF5(         saveLocation, 
+                            numOfComponentGrids,
+                            numberOfDimensions, 
+                            interior_box, 
+                            domain_box, 
+                            xy, 
+                            desc );
+    }
+    else if ( *newFileExtension == "txt" )
+    {
+        // Write grid data to text file
+        sendToTextFile(     saveLocation, 
+                            numOfComponentGrids,
+                            numberOfDimensions, 
+                            interior_box, 
+                            domain_box, 
+                            xy, 
+                            desc );
+    }
+    else
+    {
+        printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfNewFile );
+        Overture::abort( "error" );
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
 
 
     printF( "Output written to file %s\n", nameOfNewFile );

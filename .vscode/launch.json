@@ -5,14 +5,50 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch Shim In",
+            "name": "(gdb) Launch Shim In hdf to txt",
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/overture/OvertureShim/src/gridShimIn",
             "args": 
             [
                 "/home/overture/OvertureShim/overtureGrids/sqrInSqr2.hdf", 
-                "debugTest.txt"
+                "debugTestTXT.txt"
+            ],
+            "stopAtEntry": false,
+            "justMyCode": false,
+            "cwd": "/home/overture/OvertureShim",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": 
+            [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",  // Optional: explicitly set if GDB is not on PATH
+            "sourceFileMap": 
+            {
+                "/home/user/OvertureShim/src/file": "/home/overture/OvertureShim/src/gridShimIn.o"
+            },
+
+        },
+        {
+            "name": "(gdb) Launch Shim In txt to hdf",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/overture/OvertureShim/src/gridShimIn",
+            "args": 
+            [
+                "/home/overture/OvertureShim/textOutput/debugTestTXT.txt", 
+                "debugTestHDF.hdf"
             ],
             "stopAtEntry": false,
             "justMyCode": false,
