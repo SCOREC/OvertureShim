@@ -29,6 +29,7 @@ int startOverture( int argc, char *argv[] )
 }
 
 
+
 std::string getFileExtension(  const char*     fileName )
 {
     std::string       fileNameStr( fileName );
@@ -44,6 +45,7 @@ std::string getFileExtension(  const char*     fileName )
 }
 
 
+
 int getFileNameData(    int             argc, 
                         char            *argv[], 
                         const char**    nameOfOGFile, 
@@ -54,52 +56,51 @@ int getFileNameData(    int             argc,
 {
     ///////////////////////////////////////////////////////////////////////////
     // Preperations for accessing and saving files ////////////////////////////
-    if( argc == 3 )                                                  //////////                    
-    {                                                                //////////
-        *nameOfOGFile    = argv[1];                                   //////////
-        *nameOfNewFile   = argv[2];                                   //////////
-    }                                                                //////////                           
-    else                                                             //////////
-    {                                                                //////////
-        printF( "Usage: gridShimIn gridName.hdf outfile.hdf \n" );   //////////
-        Overture::abort( "error" );                                  //////////
-    }                                                                //////////
+    if( argc == 3 )                                                                      
+    {                                                                
+        *nameOfOGFile    = argv[1];                                   
+        *nameOfNewFile   = argv[2];                                   
+    }                                                                                           
+    else                                                             
+    {                                                                
+        printF( "Usage: gridShimIn gridName.hdf outfile.hdf \n" );   
+        Overture::abort( "error" );                                  
+    }                                                                
 
 
     // Get file extensions
     *ogFileExtension     = getFileExtension( *nameOfOGFile );
-
     *newFileExtension    = getFileExtension( *nameOfNewFile );
 
 
     const char *fileDir;
-                                                                     //////////
-    if      ( *newFileExtension == "hdf" )                           //////////
-    {                                                                //////////
-        printF( "Reading from hdf file: %s \n", *nameOfOGFile );     //////////
-        fileDir = "/home/overture/OvertureShim/hydeGrids/";        //////////
-    }                                                                //////////
-    else if ( *newFileExtension == "txt" )                             //////////
-    {                                                                //////////
-        printF( "Reading from txt file: %s \n", *nameOfOGFile );     //////////
-        fileDir = "/home/overture/OvertureShim/textOutput/";        //////////
+                                                                     
+    if      ( *newFileExtension == "hdf" )                           
+    {                                                                
+        printF( "Reading from hdf file: %s \n", *nameOfOGFile );     
+        fileDir = "/home/overture/OvertureShim/hydeGrids/";        
+    }                                                                
+    else if ( *newFileExtension == "txt" )                             
+    {                                                                
+        printF( "Reading from txt file: %s \n", *nameOfOGFile );     
+        fileDir = "/home/overture/OvertureShim/textOutput/";        
     }   
-    else                                                             //////////
-    {                                                                //////////
-        printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfOGFile );   //////////
-        Overture::abort( "error" );                                  //////////
-    }                                                                //////////
+    else                                                             
+    {                                                                
+        printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfOGFile );   
+        Overture::abort( "error" );                                  
+    }                                                                
 
-                                                                     //////////
-                                                                     //////////
-    strcpy( saveLocation, fileDir );                                 //////////
-    strcat( saveLocation, *nameOfNewFile );                           //////////
-    //strcat( saveLocation, ".txt" );                                //////////
+                                                                     
+                                                                     
+    strcpy( saveLocation, fileDir );                                 
+    strcat( saveLocation, *nameOfNewFile );                          
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
 
     return 0;
 }
+
 
 
 int main( int argc, char *argv[] )
@@ -134,8 +135,8 @@ int main( int argc, char *argv[] )
     // Initialize grid data 
     int                 numOfComponentGrids;
     int                 numberOfDimensions;
-    // xy[ i ][ j ][ k ][ l ]: j -> x, k -> y, l -> z, i -> numOfComponentGrids
-    Array4D<double>     *xy              = new Array4D< double >();
+
+    Array4D<double>     *xy              = new Array4D< double >(); // xy[numOfComponentGrids][ x ][ y ][ z ]
     Array3D<int>        *interior_box    = new Array3D< int >();    // Indices of interior points
     Array3D<int>        *domain_box      = new Array3D< int >();    // Indices of all points including ghost points
     Array3D<int>        *desc            = new Array3D< int >();

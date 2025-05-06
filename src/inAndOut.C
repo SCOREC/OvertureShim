@@ -30,8 +30,8 @@ int sendToTextFile(   const char*         fileName,
   for ( int gridIndex = 0; gridIndex < numOfComponentGrids; gridIndex++ )
   {
     // Send interior_box to file //////////////////////////////////////////////////////////////
-    std::cout   << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 0 ][ 1 ] << "\t" 
-                << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
+    std::cout   << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 0 ][ 1 ] << "\n" 
+                << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 1 ][ 1 ] << "\n" 
                 << std::endl;
 
     outputFile  << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << "\t" << interior_box -> data[ gridIndex ][ 0 ][ 1 ] << "\t" 
