@@ -213,10 +213,10 @@ OGMGLIB = $(OV_RPATH)$(Overture)/lib $(LDFLAGS)$(Overture)/lib -lOgmg
 
 
 Source= lins.C wave.C ChannelMapping.C getDt.C \
-           rk.C gridGenExample.C inAndOutHDF5.C gridShimIn.C gridShimOut.C gridPrint.C
+           rk.C gridGenExample.C inAndOutHDF5.C gridShimIn.C gridPrint.C
 
 # Here are the things we can make
-PROGRAMS = lins wave gridGenExample gridShimIn gridShimOut gridPrint
+PROGRAMS = lins wave gridGenExample gridShimIn gridPrint
 
 all:  depend_date $(PROGRAMS)
 
@@ -249,10 +249,6 @@ gridPrint: $(gridPrint)
 gridShimIn := gridShimIn.o inAndOutHDF5.o inAndOut.o
 gridShimIn: $(gridShimIn)
 	$(CC) $(CCFLAGS) -o gridShimIn $(gridShimIn) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
-
-gridShimOut := gridShimOut.o inAndOutHDF5.o inAndOut.o
-gridShimOut: $(gridShimOut)
-	$(CC) $(CCFLAGS) -o gridShimOut $(gridShimOut) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
     
 testpogi = testpogi.o
