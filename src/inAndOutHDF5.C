@@ -37,210 +37,170 @@ int sendToHDF5(   std::string     nameOfNewFile,
                   Array4D<double> *xy,
                   Array3D<int>    *mask )
 {
-  try
-  {
+	try
+	{
 
-    H5File* file = new H5File( nameOfNewFile, H5F_ACC_TRUNC );
-    
+		H5File* 			file 							= new H5File( nameOfNewFile, H5F_ACC_TRUNC );
+		
 
-    // Create a group for the composite grid in the file.
-    Group compGridGroup( file->createGroup( "/composite_grid") );
+		// Create a group for the composite grid in the file.
+		Group 				compGridGroup( file->createGroup( "/composite_grid") );
 
-    // Create dataspace for dataset in file.
-    DataSet   *dataset;
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////
-    // Set dimensions //////////////////////////////////////////////////////////////////////
-    hsize_t     dimsize[] = {1};
-    DataSpace   dimSpace( 1, dimsize );
-
-    dataset = new DataSet( 
-                            compGridGroup.createDataSet(  "dim", 
-                                                          PredType::NATIVE_INT, 
-                                                          dimSpace ) 
-                    );
-    dataset ->      write(  &numberOfDimensions, 
-                            PredType::NATIVE_INT );
-
-    delete dataset;
-    ////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////
-    
-
-    ////////////////////////////////////////////////////////////////////////////////////////
-    // Set numberOfComponentGrids //////////////////////////////////////////////////////////
-    
-    hsize_t     numOfGridsIntSize[] = {1};
-    DataSpace   numGridSpace( 1, numOfGridsIntSize );
-
-    dataset = new DataSet( 
-                            compGridGroup.createDataSet(  "num_of_component_grids", 
-                                                          PredType::NATIVE_INT, 
-                                                          numGridSpace ) 
-                    );
-    dataset ->      write(  &numberOfComponentGrids, 
-                            PredType::NATIVE_INT );
-
-    delete dataset;
-    ////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////
+		// Create dataspace for dataset in file.
+		DataSet   			*dataset;
 
 
-    for ( int gridIndex = 0; gridIndex < numberOfComponentGrids; gridIndex++ )
-    {
-      // Create a grid group in the file.
-      Group group( compGridGroup.createGroup( "grid_" + std::to_string( gridIndex ) ) );
+		////////////////////////////////////////////////////////////////////////////////////////
+		// Set dimensions //////////////////////////////////////////////////////////////////////
+		hsize_t     		dimsize[] 						= {1};
+		DataSpace   		dimSpace( 1, dimsize );
+
+		dataset = new DataSet( 
+								compGridGroup.createDataSet(  "dim", 
+															PredType::NATIVE_INT, 
+															dimSpace ) 
+						);
+		dataset ->      write(  &numberOfDimensions, 
+								PredType::NATIVE_INT );
+
+		delete 				dataset;
+		////////////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////////////
+		
+
+		////////////////////////////////////////////////////////////////////////////////////////
+		// Set numberOfComponentGrids //////////////////////////////////////////////////////////
+		
+		hsize_t     		numOfGridsIntSize[] 						= {1};
+		DataSpace   		numGridSpace( 1, numOfGridsIntSize );
+
+		dataset 														= new 	DataSet( 
+																							compGridGroup.createDataSet(  	"num_of_component_grids", 
+																															PredType::NATIVE_INT, 
+																															numGridSpace ) 
+																						);
+		dataset ->      write(  &numberOfComponentGrids, 
+								PredType::NATIVE_INT );
+
+		delete 				dataset;
+		////////////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////////////
 
 
-      /////////////////////////////////////////////////////////////////////////////////////
-      // Set interior box /////////////////////////////////////////////////////////////////
-      hsize_t     boxsize[] = {2, 2};
-      DataSpace   boxspace( 2, boxsize );
-
-      // Not sure why this is needed for now...
-      int interior_box_Placeholder[2][2];
-      for ( int i = 0; i < 2; i++ )
-      {
-        for ( int j = 0; j < numberOfDimensions; j++ )
-        {
-          interior_box_Placeholder[ i ][ j ] = interior_box -> data[ gridIndex ][ i ][ j ];
-        }
-      }
-
-      dataset = new DataSet( 
-                              group.createDataSet(  "interior_box", 
-                                                    PredType::NATIVE_INT, 
-                                                    boxspace ) 
-                          );
-      dataset ->      write(  &interior_box_Placeholder , 
-                              PredType::NATIVE_INT );
-
-      delete dataset;
-      /////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////
+		for ( int gridIndex = 0; gridIndex < numberOfComponentGrids; gridIndex++ )
+		{
+			// Create a grid group in the file.
+			Group 			group( compGridGroup.createGroup( "grid_" + std::to_string( gridIndex ) ) );
 
 
-      /////////////////////////////////////////////////////////////////////////////////////
-      // Set domain box ///////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set interior box /////////////////////////////////////////////////////////////////
+			hsize_t     	boxsize[] 					= {2, 2};
+			DataSpace   	boxspace( 2, boxsize );
 
-      // Not sure why this is needed for now...
-      int domain_box_Placeholder[2][2];
-      for ( int i = 0; i < 2; i++ )
-      {
-        for ( int j = 0; j < numberOfDimensions; j++ )
-        {
-          domain_box_Placeholder[ i ][ j ] = domain_box -> data[ gridIndex ][ i ][ j ];
-        }
-      }
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"interior_box", 
+																									PredType::NATIVE_INT, 
+																									boxspace ) 
+																		);
+			dataset ->      write(  interior_box -> data[ gridIndex ], 
+									PredType::NATIVE_INT );
 
-      dataset = new DataSet( 
-                              group.createDataSet(  "domain_box", 
-                                                    PredType::NATIVE_INT, 
-                                                    boxspace ) 
-                          );
-      dataset ->      write(  &domain_box_Placeholder, 
-                              PredType::NATIVE_INT );
-
-      delete dataset;
-      /////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
 
 
-      /////////////////////////////////////////////////////////////////////////////////////
-      // Set xy ///////////////////////////////////////////////////////////////////////////
-      int nx  =   domain_box -> data[ gridIndex ][ 1 ][ 0 ] - domain_box -> data[ gridIndex ][ 0 ][ 0 ];
-      int ny  =   domain_box -> data[ gridIndex ][ 1 ][ 1 ] - domain_box -> data[ gridIndex ][ 0 ][ 1 ];
-      
-      hsize_t   gridsize1[] = {   static_cast<hsize_t> ( nx + 1 ), 
-                                  static_cast<hsize_t> ( ny + 1 ), 
-                                  static_cast<hsize_t> ( numberOfDimensions ) };
-      DataSpace xyspace(  ( numberOfDimensions ) + 1, 
-                          gridsize1 );
-      
-      dataset = new DataSet( 
-                              group.createDataSet(  "xy", 
-                                                    PredType::NATIVE_DOUBLE, 
-                                                    xyspace ) 
-                          );
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set domain box ///////////////////////////////////////////////////////////////////
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"domain_box", 
+																									PredType::NATIVE_INT, 
+																									boxspace ) 
+																		);
 
-      // Not sure why this is needed for now...
-      double xy_Placeholder[ nx + 1 ][ ny + 1 ][ numberOfDimensions ];
+			dataset ->      write(  domain_box -> data[ gridIndex ], 
+									PredType::NATIVE_INT );
 
-      for( int i = 0; i < nx + 1; i++ )
-      {
-        for( int j = 0; j < ny + 1; j++ )
-        {
-          for( int k = 0; k < numberOfDimensions; k++ )
-          {
-            xy_Placeholder[ i ][ j ][ k ] = xy -> data[ gridIndex ][ i ][ j ][ k ];
-          }
-        }
-      }
-
-      dataset ->      write(  &xy_Placeholder, 
-                              PredType::NATIVE_DOUBLE );
-
-      delete dataset;
-      /////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
 
 
-      /////////////////////////////////////////////////////////////////////////////////////
-      // Set mask /////////////////////////////////////////////////////////////////////////
-      hsize_t   gridsize2[] = {  static_cast<hsize_t>(nx + 1), 
-                                 static_cast<hsize_t>(ny + 1) };
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set xy ///////////////////////////////////////////////////////////////////////////
+			int 			nx  						=   	domain_box -> data[ gridIndex ][ 1 ][ 0 ] 
+															- 	domain_box -> data[ gridIndex ][ 0 ][ 0 ];
+			int 			ny  						=   	domain_box -> data[ gridIndex ][ 1 ][ 1 ] 
+															- 	domain_box -> data[ gridIndex ][ 0 ][ 1 ];
+			
+			hsize_t   		gridsize1[] 				= { static_cast<hsize_t> ( nx + 1 ), 
+															static_cast<hsize_t> ( ny + 1 ), 
+															static_cast<hsize_t> ( numberOfDimensions ) };
 
-      DataSpace   maskspace( 2, gridsize2 );
-
-      dataset = new DataSet( 
-                              group.createDataSet(  "mask", 
-                                                    PredType::NATIVE_INT, 
-                                                    maskspace ) 
-                          );
-
-      // Not sure why this is needed for now...
-      int mask_Placeholder[ nx + 1 ][ ny + 1 ];
-
-      for( int i = 0; i < nx + 1; i++ )
-      {
-        for( int j = 0; j < ny + 1; j++ )
-        {
-          mask_Placeholder[ i ][ j ] = mask -> data[ gridIndex ][ i ][ j ];
-        }
-      }
-
-      dataset ->      write(  &mask_Placeholder, 
-                              PredType::NATIVE_INT );
-
-      delete dataset;
-      /////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////
-    }
+			DataSpace 		xyspace(  	numberOfDimensions + 1, 
+										gridsize1 );
+			
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"xy", 
+																									PredType::NATIVE_DOUBLE, 
+																									xyspace ) 
+																		);
 
 
-    file->close();
-  } 
+			dataset ->      write(  xy -> data[ gridIndex ], 
+									PredType::NATIVE_DOUBLE );
 
-   // catch failure caused by the DataSet operations
-  catch( DataSetIException error )
-  {
-    std::cout << error.getDetailMsg() << std::endl;
-    std::cout << "dataset exception" << std::endl;
-    error.printErrorStack();
-    return -1;
-  }
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
 
-  // catch failure caused by the DataSpace operations
-  catch( DataSpaceIException error )
-  {
-    std::cout << error.getDetailMsg() << std::endl;
-    std::cout << "dataspace exception" << std::endl;
-    error.printErrorStack();
-    return -1;
-  }
 
-  return 0;
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set mask /////////////////////////////////////////////////////////////////////////
+			hsize_t   		gridsize2[] 				= { static_cast<hsize_t>(nx + 1), 
+															static_cast<hsize_t>(ny + 1) };
+
+			DataSpace   	maskspace( 2, gridsize2 );
+
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"mask", 
+																									PredType::NATIVE_INT, 
+																									maskspace ) 
+																		);
+
+
+			dataset ->      write(  mask -> data[ gridIndex ], 
+									PredType::NATIVE_INT );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+		}
+
+
+		file->close();
+	} 
+
+	// catch failure caused by the DataSet operations
+	catch( DataSetIException error )
+	{
+		std::cout << error.getDetailMsg() << std::endl;
+		std::cout << "dataset exception" << std::endl;
+		error.printErrorStack();
+		return -1;
+	}
+
+	// catch failure caused by the DataSpace operations
+	catch( DataSpaceIException error )
+	{
+		std::cout << error.getDetailMsg() << std::endl;
+		std::cout << "dataspace exception" << std::endl;
+		error.printErrorStack();
+		return -1;
+	}
+
+	return 0;
 }
 
 
