@@ -253,123 +253,123 @@ int getFromHDF5(    const char*     fileName,
                     Array4D<double> *xy,
                     Array3D<int>    *desc )
 {   
-  // Read in a CompositeGrid
-  aString nameOfOGFile      = fileName;
-  CompositeGrid             compositeGrid;
-  getFromADataBase( compositeGrid, nameOfOGFile );
+	// Read in a CompositeGrid
+	aString 					nameOfOGFile      		= fileName;
+	CompositeGrid             	compositeGrid;
+	getFromADataBase( compositeGrid, nameOfOGFile );
 
 
-  /////////////////////////////////////////////////////////////////////////////////
-  // Initialize number of component grids and dimension of grid data /////////////
-  int numOfCompGrids        = compositeGrid.numberOfComponentGrids();
-  *numberOfComponentGrids   = numOfCompGrids;
+	/////////////////////////////////////////////////////////////////////////////////
+	// Initialize number of component grids and dimension of grid data /////////////
+	int 		numOfCompGrids        	= compositeGrid.numberOfComponentGrids();
+	*numberOfComponentGrids   			= numOfCompGrids;
 
-  int numOfDimensions       = compositeGrid.numberOfDimensions();
-  *numberOfDimensions       = numOfDimensions;
+	int 		numOfDimensions       	= compositeGrid.numberOfDimensions();
+	*numberOfDimensions       			= numOfDimensions;
 
-  // Allocate space where possible for grid data
-  interior_box    ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
-  domain_box      ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
-  xy              ->    allocate( numOfCompGrids, 0, 0, 0,              -1, -1, -1 );
-  desc            ->    allocate( numOfCompGrids, 0, 0,                 -1, -1 );
-  /////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////
+	// Allocate space where possible for grid data
+	interior_box    ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
+	domain_box      ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
+	xy              ->    allocate( numOfCompGrids, 0, 0, 0,              -1, -1, -1 );
+	desc            ->    allocate( numOfCompGrids, 0, 0,                 -1, -1 );
+	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////
 
-  
-  // Get number of interp pts from CompositeGrid
-  const IntegerArray & ni = compositeGrid.numberOfInterpolationPoints;
-  
-  for ( int gridIndex = 0; gridIndex < numOfCompGrids; gridIndex++ )
-  {
-    // Utilize Overture methods to easily retrieve data
-    MappedGrid & grid = compositeGrid[ gridIndex ];
-    grid.update( MappedGrid::THEvertex | MappedGrid::THEmask );  // create the vertex and mask arrays
+	
+	// Get number of interp pts from CompositeGrid
+	const IntegerArray 		&ni 		= compositeGrid.numberOfInterpolationPoints;
+	
+	for ( int gridIndex = 0; gridIndex < numOfCompGrids; gridIndex++ )
+	{
+		// Utilize Overture methods to easily retrieve data
+		MappedGrid 				&grid 					= compositeGrid[ gridIndex ];
+		grid.update( MappedGrid::THEvertex | MappedGrid::THEmask );  // create the vertex and mask arrays
 
-    const IntegerArray & gridDimensions = grid.dimension();          // grid array dimensions
-    const IntegerArray & gridIndexRange = grid.gridIndexRange();
-    const IntegerArray & bc             = grid.boundaryCondition();  // unused for now
-
-
-    printf( "%i %s (grid and name)\n"
-            "%i %i %i %i %i %i ( dimension(0:1,0:2), array dimensions )\n"
-            "%i %i %i %i %i %i ( gridIndexRange(0:1,0:2), grid bounds )\n"
-            "%i %i %i %i %i %i ( boundaryCondition(0:1,0:2) )\n"
-            "%i %i %i          ( isPeriodic(0:2), 0 = not, 1 = deriv, 2 = function )\n",
-            gridIndex             , (const char*)grid.getName(),
-            gridDimensions( 0, 0 ), gridDimensions( 1, 0 ), gridDimensions( 0, 1 ), 
-            gridDimensions( 1, 1 ), gridDimensions( 0, 2 ), gridDimensions( 1, 2 ),
-            gridIndexRange( 0, 0 ), gridIndexRange( 1, 0 ), gridIndexRange( 0, 1 ), 
-            gridIndexRange( 1, 1 ), gridIndexRange( 0, 2 ), gridIndexRange( 1, 2 ),
-            bc( 0, 0 ), bc( 1, 0 ), bc( 0, 1 ), bc( 1, 1 ), bc( 0, 2 ), bc( 1, 2 ),
-            grid.isPeriodic(0)    , grid.isPeriodic(1)    , grid.isPeriodic(2) );
-    
-    
-    const intArray & mask = grid.mask();
-    intSerialArray maskLocal; 
-
-    // local array on this processor
-    getLocalArrayWithGhostBoundaries( mask, maskLocal );  
-    const realArray & vertex = grid.vertex();
-    realSerialArray vertexLocal; 
-
-    // local array on this processor
-    getLocalArrayWithGhostBoundaries( vertex, vertexLocal );   
-    // Note that k below is just 0, not a real loop index. Only one Z index.
-    int k       = vertexLocal.getBase( 3 );
+		const IntegerArray 		&gridDimensions 		= grid.dimension();          // grid array dimensions
+		const IntegerArray 		&gridIndexRange 		= grid.gridIndexRange();
+		const IntegerArray 		&bc             		= grid.boundaryCondition();  // unused for now
 
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Set interior_box and domain_box /////////////////////////////////////////////////////////////////
-    for ( int i = 0; i < 2; i++ )
-    {
-      for ( int j = 0; j < numOfDimensions; j++ )
-      {
-        interior_box -> data[ gridIndex ][ i ][ j ] = gridIndexRange( i, j ) - gridDimensions( 0, j );
-        domain_box   -> data[ gridIndex ][ i ][ j ] = gridDimensions( i, j ) - gridDimensions( 0, j );
-      }
-    }
-    
-    // Print interior_box for verification
-    std::cout << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << interior_box -> data[ gridIndex ][ 0 ][ 1 ] 
-              << interior_box -> data[ gridIndex ][ 1 ][ 0 ] << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
-              << std::endl;
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
+		printf( "%i %s (grid and name)\n"
+				"%i %i %i %i %i %i ( dimension(0:1,0:2), array dimensions )\n"
+				"%i %i %i %i %i %i ( gridIndexRange(0:1,0:2), grid bounds )\n"
+				"%i %i %i %i %i %i ( boundaryCondition(0:1,0:2) )\n"
+				"%i %i %i          ( isPeriodic(0:2), 0 = not, 1 = deriv, 2 = function )\n",
+				gridIndex             , (const char*)grid.getName(),
+				gridDimensions( 0, 0 ), gridDimensions( 1, 0 ), gridDimensions( 0, 1 ), 
+				gridDimensions( 1, 1 ), gridDimensions( 0, 2 ), gridDimensions( 1, 2 ),
+				gridIndexRange( 0, 0 ), gridIndexRange( 1, 0 ), gridIndexRange( 0, 1 ), 
+				gridIndexRange( 1, 1 ), gridIndexRange( 0, 2 ), gridIndexRange( 1, 2 ),
+				bc( 0, 0 ), bc( 1, 0 ), bc( 0, 1 ), bc( 1, 1 ), bc( 0, 2 ), bc( 1, 2 ),
+				grid.isPeriodic(0)    , grid.isPeriodic(1)    , grid.isPeriodic(2) );
+		
+		
+		const intArray 			&mask 				= grid.mask();
+		intSerialArray 			maskLocal; 
+
+		// local array on this processor
+		getLocalArrayWithGhostBoundaries( mask, maskLocal );  
+		const realArray 		&vertex 			= grid.vertex();
+		realSerialArray 		vertexLocal; 
+
+		// local array on this processor
+		getLocalArrayWithGhostBoundaries( vertex, vertexLocal );   
+		// Note that k below is just 0, not a real loop index. Only one Z index.
+		int 	k       = vertexLocal.getBase( 3 );
 
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Set desc, xy, and mask //////////////////////////////////////////////////////////////////////////////
-    int nx      = gridDimensions( 1, 0 ) - gridDimensions( 0, 0 );
-    int ny      = gridDimensions( 1, 1 ) - gridDimensions( 0, 1 );
+		/////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Set interior_box and domain_box /////////////////////////////////////////////////////////////////
+		for ( int i = 0; i < 2; i++ )
+		{
+			for ( int j = 0; j < numOfDimensions; j++ )
+			{
+				interior_box -> data[ gridIndex ][ i ][ j ] 	= gridIndexRange( i, j ) - gridDimensions( 0, j );
+				domain_box   -> data[ gridIndex ][ i ][ j ] 	= gridDimensions( i, j ) - gridDimensions( 0, j );
+			}
+		}
+		
+		// Print interior_box for verification
+		std::cout << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << interior_box -> data[ gridIndex ][ 0 ][ 1 ] 
+				<< interior_box -> data[ gridIndex ][ 1 ][ 0 ] << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
+				<< std::endl;
+		/////////////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Allocate space for gridIndex'th grid in desc and xy
-    desc  -> allocate( 0, ( nx + 1 ), ( ny + 1 ),                       gridIndex, -1 );
-    xy    -> allocate( 0, ( nx + 1 ), ( ny + 1 ), numOfDimensions,      gridIndex, -1, -1 );
-    
-    for( int i = 0; i < nx + 1; i++ )
-    {
-      for( int j = 0; j < ny + 1; j++ )
-      {
-        desc -> data[ gridIndex ][ i ][ j ]   = maskLocal(  i + gridDimensions( 0, 0 ), 
-                                                            j + gridDimensions( 0, 1 ), 
-                                                            k ) >= 0 ? -1: 1;
 
-        for( int l = 0; l < numOfDimensions; l++ )
-        {
-          xy -> data[ gridIndex ][ i ][ j ][ l ]  = vertexLocal(  i + gridDimensions( 0, 0 ), 
-                                                                  j + gridDimensions( 0, 1 ), 
-                                                                  k + gridDimensions( 0, 2 ), l );
-        }
+		////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Set desc, xy, and mask //////////////////////////////////////////////////////////////////////////////
+		int 	nx      = gridDimensions( 1, 0 ) - gridDimensions( 0, 0 );
+		int 	ny      = gridDimensions( 1, 1 ) - gridDimensions( 0, 1 );
 
-      }
-    }
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+		// Allocate space for gridIndex'th grid in desc and xy
+		desc  -> allocate( 0, ( nx + 1 ), ( ny + 1 ),                       gridIndex, -1 );
+		xy    -> allocate( 0, ( nx + 1 ), ( ny + 1 ), numOfDimensions,      gridIndex, -1, -1 );
+		
+		for( int i = 0; i < nx + 1; i++ )
+		{
+			for( int j = 0; j < ny + 1; j++ )
+			{
+				desc -> data[ gridIndex ][ i ][ j ]   		= maskLocal(  	i + gridDimensions( 0, 0 ), 
+																			j + gridDimensions( 0, 1 ), 
+																			k ) >= 0 ? -1: 1;
 
-    // destroy arrays to save space
-    grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  
-  }
+				for( int l = 0; l < numOfDimensions; l++ )
+				{
+					xy -> data[ gridIndex ][ i ][ j ][ l ]  	= vertexLocal(  i + gridDimensions( 0, 0 ), 
+																				j + gridDimensions( 0, 1 ), 
+																				k + gridDimensions( 0, 2 ), l );
+				}
 
-  return 0;
+			}
+		}
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+		// destroy arrays to save space
+		grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  
+	}
+
+	return 0;
 }
