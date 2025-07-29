@@ -261,17 +261,17 @@ int getFromHDF5(    const char*     fileName,
 
 	/////////////////////////////////////////////////////////////////////////////////
 	// Initialize number of component grids and dimension of grid data /////////////
-	int 		numOfCompGrids        	= compositeGrid.numberOfComponentGrids();
-	*numberOfComponentGrids   			= numOfCompGrids;
+	int 		numOfGrids        		= compositeGrid.numberOfComponentGrids();
+	*numberOfComponentGrids   			= numOfGrids;
 
 	int 		numOfDimensions       	= compositeGrid.numberOfDimensions();
 	*numberOfDimensions       			= numOfDimensions;
 
 	// Allocate space where possible for grid data
-	interior_box    ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
-	domain_box      ->    allocate( numOfCompGrids, 2, numOfDimensions,   -1, -1 );
-	xy              ->    allocate( numOfCompGrids, 0, 0, 0,              -1, -1, -1 );
-	desc            ->    allocate( numOfCompGrids, 0, 0,                 -1, -1 );
+	interior_box    ->    allocate( numOfGrids, 2, numOfDimensions,   -1, -1 );
+	domain_box      ->    allocate( numOfGrids, 2, numOfDimensions,   -1, -1 );
+	xy              ->    allocate( numOfGrids, 0, 0, 0,              -1, -1, -1 );
+	desc            ->    allocate( numOfGrids, 0, 0,                 -1, -1 );
 	/////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////
 
@@ -279,7 +279,7 @@ int getFromHDF5(    const char*     fileName,
 	// Get number of interp pts from CompositeGrid
 	const IntegerArray 		&ni 		= compositeGrid.numberOfInterpolationPoints;
 	
-	for ( int gridIndex = 0; gridIndex < numOfCompGrids; gridIndex++ )
+	for ( int gridIndex = 0; gridIndex < numOfGrids; gridIndex++ )
 	{
 		// Utilize Overture methods to easily retrieve data
 		MappedGrid 				&grid 					= compositeGrid[ gridIndex ];
