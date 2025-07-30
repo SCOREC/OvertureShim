@@ -8,15 +8,15 @@
             "name": "(gdb) Launch Shim In hdf to txt",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/OvertureShim/src/gridShimIn",
+            "program": "/home/overture/overture-hyde-shim/src/gridShim",
             "args": 
             [
-                "/home/overture/OvertureShim/overtureGrids/sqrInSqr2.hdf", 
+                "/home/overture/overture-hyde-shim/overtureGrids/sqrInSqr.hdf", 
                 "debugTestTXT.txt"
             ],
             "stopAtEntry": false,
             "justMyCode": false,
-            "cwd": "/home/overture/OvertureShim",
+            "cwd": "/home/overture/overture-hyde-shim",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -36,7 +36,43 @@
             "miDebuggerPath": "/usr/bin/gdb",  // Optional: explicitly set if GDB is not on PATH
             "sourceFileMap": 
             {
-                "/home/user/OvertureShim/src/file": "/home/overture/OvertureShim/src/gridShimIn.o"
+                "/home/user/overture-hyde-shim/src/file": "/home/overture/overture-hyde-shim/src/gridShim.o"
+            },
+
+        },
+		{
+            "name": "(gdb) Launch Shim In hdf to hdf",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/overture/overture-hyde-shim/src/gridShim",
+            "args": 
+            [
+                "/home/overture/overture-hyde-shim/overtureGrids/sqrInSqr.hdf", 
+                "debugTestHDF.hdf"
+            ],
+            "stopAtEntry": false,
+            "justMyCode": false,
+            "cwd": "/home/overture/overture-hyde-shim",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": 
+            [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",  // Optional: explicitly set if GDB is not on PATH
+            "sourceFileMap": 
+            {
+                "/home/user/overture-hyde-shim/src/file": "/home/overture/overture-hyde-shim/src/gridShim.o"
             },
 
         },
@@ -44,15 +80,15 @@
             "name": "(gdb) Launch Shim In txt to hdf",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/OvertureShim/src/gridShimIn",
+            "program": "/home/overture/overture-hyde-shim/src/gridShim",
             "args": 
             [
-                "/home/overture/OvertureShim/textOutput/debugTestTXT.txt", 
+                "/home/overture/overture-hyde-shim/textOutput/debugTestTXT.txt", 
                 "debugTestHDF.hdf"
             ],
             "stopAtEntry": false,
             "justMyCode": false,
-            "cwd": "/home/overture/OvertureShim",
+            "cwd": "/home/overture/overture-hyde-shim",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -72,23 +108,23 @@
             "miDebuggerPath": "/usr/bin/gdb",  // Optional: explicitly set if GDB is not on PATH
             "sourceFileMap": 
             {
-                "/home/user/OvertureShim/src/file": "/home/overture/OvertureShim/src/gridShimIn.o"
+                "/home/user/overture-hyde-shim/src/file": "/home/overture/overture-hyde-shim/src/gridShim.o"
             },
 
         },
         {
-            "name": "(gdb) Launch Shim Out",
+            "name": "(gdb) Launch gridPrint",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/OvertureShim/src/gridShimOut",
+            "program": "/home/overture/overture-hyde-shim/src/gridPrint",
             "args": 
             [
-                "/home/overture/OvertureShim/textOutput/debugTest.txt", 
-                "sqrInSqr2_hyde.hdf"
+                "/home/overture/overture-hyde-shim/overtureGrids/sqrInSqr.hdf", 
+                "debugTestTXT.txt"
             ],
             "stopAtEntry": false,
             "justMyCode": false,
-            "cwd": "/home/overture/OvertureShim",
+            "cwd": "/home/overture/overture-hyde-shim",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -108,10 +144,11 @@
             "miDebuggerPath": "/usr/bin/gdb",  // Optional: explicitly set if GDB is not on PATH
             "sourceFileMap": 
             {
-                "/home/user/OvertureShim/src/file": "/home/overture/OvertureShim/src/gridShimOut.o"
+                "/home/user/overture-hyde-shim/src/file": "/home/overture/overture-hyde-shim/src/gridPrint.o"
             },
 
         }
+        
 
     ]
 }

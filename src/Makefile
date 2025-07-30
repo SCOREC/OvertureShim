@@ -212,11 +212,12 @@ OGMGLIB = $(OV_RPATH)$(Overture)/lib $(LDFLAGS)$(Overture)/lib -lOgmg
 #
 
 
-Source= lins.C wave.C ChannelMapping.C getDt.C \
-           rk.C gridGenExample.C inAndOutHDF5.C gridShimIn.C gridPrint.C
+# Source= lins.C wave.C ChannelMapping.C getDt.C \
+#            rk.C inAndOutHDF5.C gridShim.C gridPrint.C
+Source= inAndOutHDF5.C gridShim.C gridPrint.C
 
 # Here are the things we can make
-PROGRAMS = lins wave gridGenExample gridShimIn gridPrint
+PROGRAMS = gridShim gridPrint
 
 all:  depend_date $(PROGRAMS)
 
@@ -229,36 +230,32 @@ all:  depend_date $(PROGRAMS)
 	 $(CC) $(CCFLAGS) -o $@ $< $(CLIBS) $(FLIBS)  $(GLIBS)
 
 
-lins = lins.o 
-lins: $(lins) 
-	$(CC) $(CCFLAGS) -o lins $(lins) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
+# lins = lins.o 
+# lins: $(lins) 
+# 	$(CC) $(CCFLAGS) -o lins $(lins) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
 # 2d wave equation
-wave = wave.o getDt.o
-wave: $(wave) 
-	$(CC) $(CCFLAGS) -o wave $(wave) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
-
-gridGenExample = gridGenExample.o 
-gridGenExample: $(gridGenExample) 
-	$(CC) $(CCFLAGS) -o gridGenExample $(gridGenExample) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
+# wave = wave.o getDt.o
+# wave: $(wave) 
+# 	$(CC) $(CCFLAGS) -o wave $(wave) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
 gridPrint := gridPrint.o
 gridPrint: $(gridPrint)
 	$(CC) $(CCFLAGS) -o gridPrint $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-gridShimIn := gridShimIn.o inAndOutHDF5.o inAndOut.o
-gridShimIn: $(gridShimIn)
-	$(CC) $(CCFLAGS) -o gridShimIn $(gridShimIn) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
+gridShim := gridShim.o inAndOutHDF5.o inAndOut.o
+gridShim: $(gridShim)
+	$(CC) $(CCFLAGS) -o gridShim $(gridShim) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
     
-testpogi = testpogi.o
-testpogi: $(testpogi) 
-	$(CC) $(CCFLAGS) -o testpogi $(testpogi) $(CLIBS) $(FLIBS) $(GLIBS)
+# testpogi = testpogi.o
+# testpogi: $(testpogi) 
+# 	$(CC) $(CCFLAGS) -o testpogi $(testpogi) $(CLIBS) $(FLIBS) $(GLIBS)
 
 # test the redistrubution to one processor
-testDistribute = testDistribute.o 
-testDistribute: $(testDistribute) 
-	$(CC) $(CCFLAGS) -o testDistribute $(testDistribute) $(CLIBS) $(FLIBS) $(GLIBS)
+# testDistribute = testDistribute.o 
+# testDistribute: $(testDistribute) 
+# 	$(CC) $(CCFLAGS) -o testDistribute $(testDistribute) $(CLIBS) $(FLIBS) $(GLIBS)
 
 # simplified interface for compiling user programs
 getFlags: $(Overture)/bin/makeGetFlags
