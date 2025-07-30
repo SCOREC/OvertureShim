@@ -32,9 +32,10 @@ using namespace H5;
 int sendToHDF5(   std::string     nameOfNewFile,
                   int             numberOfComponentGrids, 
                   int             numberOfDimensions,
-                  Array3D<int>    *interior_box, 
-                  Array3D<int>    *domain_box, 
-                  Array4D<double> *xy,
+                  Array3D<int>    *grid_index_range, 
+                  Array3D<int>    *ext_index_range,
+                  Array3D<int>    *bcs, 
+                  Array4D<double> *xy, 
                   Array3D<int>    *mask )
 {
 	try
@@ -55,11 +56,11 @@ int sendToHDF5(   std::string     nameOfNewFile,
 		hsize_t     		dimsize[] 						= {1};
 		DataSpace   		dimSpace( 1, dimsize );
 
-		dataset = new DataSet( 
-								compGridGroup.createDataSet(  "dim", 
-															PredType::NATIVE_INT, 
-															dimSpace ) 
-						);
+		dataset 											= new 	DataSet( 
+																				compGridGroup.createDataSet(  	"dim", 
+																												PredType::NATIVE_INT, 
+																												dimSpace ) 
+																			);
 		dataset ->      write(  &numberOfDimensions, 
 								PredType::NATIVE_INT );
 
@@ -95,15 +96,26 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set interior box /////////////////////////////////////////////////////////////////
-			hsize_t     	boxsize[] 					= {2, 2};
+			hsize_t     	boxsize[] 					= {2, 3};
 			DataSpace   	boxspace( 2, boxsize );
 
+			// Not sure why this is needed for now...
+			int grid_index_range_Placeholder[ 2 ][ 3 ];
+			for ( int i = 0; i < 2; i++ )
+			{
+				for ( int j = 0; j < 3; j++ )
+				{
+					grid_index_range_Placeholder[ i ][ j ] 			= grid_index_range -> data[ gridIndex ][ i ][ j ];
+				}
+			}
+
+
 			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"interior_box", 
+																			group.createDataSet(  	"grid_index_range", 
 																									PredType::NATIVE_INT, 
 																									boxspace ) 
 																		);
-			dataset ->      write(  interior_box -> data[ gridIndex ], 
+			dataset ->      write(  &grid_index_range_Placeholder, 
 									PredType::NATIVE_INT );
 
 			delete 			dataset;
@@ -113,13 +125,49 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set domain box ///////////////////////////////////////////////////////////////////
+			// Not sure why this is needed for now...
+			int ext_index_range_Placeholder[ 2 ][ 3 ];
+			for ( int i = 0; i < 2; i++ )
+			{
+				for ( int j = 0; j < 3; j++ )
+				{
+					ext_index_range_Placeholder[ i ][ j ] 			= ext_index_range -> data[ gridIndex ][ i ][ j ];
+				}
+			}
+
 			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"domain_box", 
+																			group.createDataSet(  	"ext_index_range", 
 																									PredType::NATIVE_INT, 
 																									boxspace ) 
 																		);
 
-			dataset ->      write(  domain_box -> data[ gridIndex ], 
+			dataset ->      write(  &ext_index_range_Placeholder, 
+									PredType::NATIVE_INT );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set bcs //////////////////////////////////////////////////////////////////////////
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"bcs", 
+																									PredType::NATIVE_INT, 
+																									boxspace ) 
+																		);
+
+			// Not sure why this is needed for now...
+			int bcs_Placeholder[ 2 ][ 3 ];
+			for ( int i = 0; i < 2; i++ )
+			{
+				for ( int j = 0; j < 3; j++ )
+				{
+					bcs_Placeholder[ i ][ j ] 			= bcs -> data[ gridIndex ][ i ][ j ];
+				}
+			}
+
+			dataset ->      write(  &bcs_Placeholder, 
 									PredType::NATIVE_INT );
 
 			delete 			dataset;
@@ -129,10 +177,10 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set xy ///////////////////////////////////////////////////////////////////////////
-			int 			nx  						=   	domain_box -> data[ gridIndex ][ 1 ][ 0 ] 
-															- 	domain_box -> data[ gridIndex ][ 0 ][ 0 ];
-			int 			ny  						=   	domain_box -> data[ gridIndex ][ 1 ][ 1 ] 
-															- 	domain_box -> data[ gridIndex ][ 0 ][ 1 ];
+			int 			nx  						=   	ext_index_range -> data[ gridIndex ][ 1 ][ 0 ] 
+															- 	ext_index_range -> data[ gridIndex ][ 0 ][ 0 ];
+			int 			ny  						=   	ext_index_range -> data[ gridIndex ][ 1 ][ 1 ] 
+															- 	ext_index_range -> data[ gridIndex ][ 0 ][ 1 ];
 			
 			hsize_t   		gridsize1[] 				= { static_cast<hsize_t> ( nx + 1 ), 
 															static_cast<hsize_t> ( ny + 1 ), 
@@ -147,8 +195,22 @@ int sendToHDF5(   std::string     nameOfNewFile,
 																									xyspace ) 
 																		);
 
+			// Not sure why this is needed for now...
+			double xy_Placeholder[ nx + 1 ][ ny + 1 ][ numberOfDimensions ];
 
-			dataset ->      write(  xy -> data[ gridIndex ], 
+			for( int i = 0; i < nx + 1; i++ )
+			{
+				for( int j = 0; j < ny + 1; j++ )
+				{
+					for( int k = 0; k < numberOfDimensions; k++ )
+					{
+						xy_Placeholder[ i ][ j ][ k ] 			= xy -> data[ gridIndex ][ i ][ j ][ k ];
+					}
+				}
+			}
+
+
+			dataset ->      write(  &xy_Placeholder, 
 									PredType::NATIVE_DOUBLE );
 
 			delete 			dataset;
@@ -165,12 +227,23 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 			dataset 									= new 	DataSet( 
 																			group.createDataSet(  	"mask", 
-																									PredType::NATIVE_INT, 
+																									PredType::NATIVE_HBOOL, 
 																									maskspace ) 
 																		);
 
+			// Not sure why this is needed for now...
+			int mask_Placeholder[ nx + 1 ][ ny + 1 ];
 
-			dataset ->      write(  mask -> data[ gridIndex ], 
+			for( int i = 0; i < nx + 1; i++ )
+			{
+				for( int j = 0; j < ny + 1; j++ )
+				{
+					mask_Placeholder[ i ][ j ] 			= mask -> data[ gridIndex ][ i ][ j ];
+				}
+			}
+
+
+			dataset ->      write(  &mask_Placeholder, 
 									PredType::NATIVE_INT );
 
 			delete 			dataset;
@@ -208,9 +281,10 @@ int sendToHDF5(   std::string     nameOfNewFile,
 int getFromHDF5(    const char*     fileName, 
                     int             *numberOfComponentGrids, 
                     int             *numberOfDimensions,
-                    Array3D<int>    *interior_box, 
-                    Array3D<int>    *domain_box, 
-                    Array4D<double> *xy,
+                    Array3D<int>    *grid_index_range, 
+                    Array3D<int>    *ext_index_range,
+                  	Array3D<int>    *bcs, 
+                    Array4D<double> *xy, 
                     Array3D<int>    *desc )
 {   
 	// Read in a CompositeGrid
@@ -228,10 +302,11 @@ int getFromHDF5(    const char*     fileName,
 	*numberOfDimensions       			= numOfDimensions;
 
 	// Allocate space where possible for grid data
-	interior_box    ->    allocate( numOfGrids, 2, numOfDimensions,   -1, -1 );
-	domain_box      ->    allocate( numOfGrids, 2, numOfDimensions,   -1, -1 );
-	xy              ->    allocate( numOfGrids, 0, 0, 0,              -1, -1, -1 );
-	desc            ->    allocate( numOfGrids, 0, 0,                 -1, -1 );
+	grid_index_range    	->    allocate( numOfGrids, 3, numOfDimensions,   -1, -1 );
+	ext_index_range      	->    allocate( numOfGrids, 3, numOfDimensions,   -1, -1 );
+	bcs 					->    allocate( numOfGrids, 3, numOfDimensions,   -1, -1 );
+	xy              		->    allocate( numOfGrids, 0, 0, 0,              -1, -1, -1 );
+	desc            		->    allocate( numOfGrids, 0, 0,                 -1, -1 );
 	/////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +322,13 @@ int getFromHDF5(    const char*     fileName,
 
 		const IntegerArray 		&gridDimensions 		= grid.dimension();          // grid array dimensions
 		const IntegerArray 		&gridIndexRange 		= grid.gridIndexRange();
+    	const IntegerArray 		&extIndexRange 			= grid.extendedIndexRange();
 		const IntegerArray 		&bc             		= grid.boundaryCondition();  // unused for now
+
+    	const IntegerArray 		&numOfGhosts 			= grid.numberOfGhostPoints();
+    	const Logical 			&useGhostPoints 		= grid.useGhostPoints();
+    	const RealArray 		&boundingBox 			= grid.boundingBox();
+    	const RealArray 		&gridSpacing 			= grid.gridSpacing();
 
 
 		printf( "%i %s (grid and name)\n"
@@ -275,24 +356,25 @@ int getFromHDF5(    const char*     fileName,
 		// local array on this processor
 		getLocalArrayWithGhostBoundaries( vertex, vertexLocal );   
 		// Note that k below is just 0, not a real loop index. Only one Z index.
-		int 	k       = vertexLocal.getBase( 3 );
+		int 					k       			= vertexLocal.getBase( 3 );
 
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
-		// Set interior_box and domain_box /////////////////////////////////////////////////////////////////
+		// Set grid_index_range and ext_index_range /////////////////////////////////////////////////////////////////
 		for ( int i = 0; i < 2; i++ )
 		{
-			for ( int j = 0; j < numOfDimensions; j++ )
+			for ( int j = 0; j < 3; j++ )
 			{
-				interior_box -> data[ gridIndex ][ i ][ j ] 	= gridIndexRange( i, j ) - gridDimensions( 0, j );
-				domain_box   -> data[ gridIndex ][ i ][ j ] 	= gridDimensions( i, j ) - gridDimensions( 0, j );
+				grid_index_range 	-> data[ gridIndex ][ i ][ j ] 		= gridIndexRange( i, j );
+				ext_index_range   	-> data[ gridIndex ][ i ][ j ] 		= extIndexRange( i, j );
+				bcs		  			-> data[ gridIndex ][ i ][ j ] 		= bc( i, j );
 			}
 		}
 		
-		// Print interior_box for verification
-		std::cout << interior_box -> data[ gridIndex ][ 0 ][ 0 ] << interior_box -> data[ gridIndex ][ 0 ][ 1 ] 
-				<< interior_box -> data[ gridIndex ][ 1 ][ 0 ] << interior_box -> data[ gridIndex ][ 1 ][ 1 ] 
-				<< std::endl;
+		// Print grid_index_range for verification
+		std::cout 	<< ext_index_range -> data[ gridIndex ][ 0 ][ 0 ] << " " << ext_index_range -> data[ gridIndex ][ 0 ][ 1 ] << " " 
+					<< ext_index_range -> data[ gridIndex ][ 1 ][ 0 ] << " " << ext_index_range -> data[ gridIndex ][ 1 ][ 1 ] << " " 
+					<< std::endl;
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
 
