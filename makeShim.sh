@@ -1,9 +1,10 @@
 #!/bin/bash
 
 source ~/env.sh
-cd ~/OvertureShim/src
+
 if [ "$1" == "clean" ]; then
-    make clean
+    make -C src clean
 fi
-make -j${nproc}
-cd ..
+
+make -C src -j${nproc}
+

@@ -1,6 +1,11 @@
 #!/bin/bash
 
+source ~/env.sh
+
 rm -rf build
-cmake -S . -B build
-cd build
-make -j${nproc}
+mkdir build
+
+touch build/depend
+touch build/depend_date
+
+make -C src -j${nproc}

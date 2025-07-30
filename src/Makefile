@@ -211,15 +211,22 @@ OGMGLIB = $(OV_RPATH)$(Overture)/lib $(LDFLAGS)$(Overture)/lib -lOgmg
 #    type `make' to make all examples
 #
 
+BUILDDIR = /home/overture/overture-hyde-shim/build
 
-# Source= lins.C wave.C ChannelMapping.C getDt.C \
-#            rk.C inAndOutHDF5.C gridShim.C gridPrint.C
-Source= inAndOutHDF5.C gridShim.C gridPrint.C
+SOURCES = inAndOutHDF5.C inAndOut.C gridShim.C gridPrint.C
+OBJECTS = $(patsubst %.C, $(BUILDDIR)/%.o, $(SOURCES))
 
 # Here are the things we can make
-PROGRAMS = gridShim gridPrint
+PROGRAMS = $(BUILDDIR)/gridShim $(BUILDDIR)/gridPrint
+# DEPEND_DATE = $(addprefix $(BUILDDIR)/, depend_date)
+# OBJECTS = $(patsubst $(SOURCES), $(BUILDDIR)/%.o, $(SOURCES))
+DEPEND = $(BUILDDIR)/depend
+DEPEND_DATE = $(BUILDDIR)/depend_date
 
-all:  depend_date $(PROGRAMS)
+all: dir $(DEPEND_DATE) $(PROGRAMS)
+
+dir:
+	mkdir -p $(BUILDDIR)
 
 .SUFFIXES:
 .SUFFIXES: .C .C .o .f 
@@ -230,32 +237,19 @@ all:  depend_date $(PROGRAMS)
 	 $(CC) $(CCFLAGS) -o $@ $< $(CLIBS) $(FLIBS)  $(GLIBS)
 
 
-# lins = lins.o 
-# lins: $(lins) 
-# 	$(CC) $(CCFLAGS) -o lins $(lins) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-# 2d wave equation
-# wave = wave.o getDt.o
-# wave: $(wave) 
-# 	$(CC) $(CCFLAGS) -o wave $(wave) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
+gridPrint := $(BUILDDIR)/gridPrint.o
+$(BUILDDIR)/gridPrint: $(gridPrint)
+	$(CC) $(CCFLAGS) -o $@ $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-gridPrint := gridPrint.o
-gridPrint: $(gridPrint)
-	$(CC) $(CCFLAGS) -o gridPrint $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
+gridShim = $(BUILDDIR)/gridShim.o $(BUILDDIR)/inAndOutHDF5.o $(BUILDDIR)/inAndOut.o
+$(BUILDDIR)/gridShim: $(gridShim)
+	$(CC) $(CCFLAGS) -o $@ $(gridShim) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-gridShim := gridShim.o inAndOutHDF5.o inAndOut.o
-gridShim: $(gridShim)
-	$(CC) $(CCFLAGS) -o gridShim $(gridShim) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-    
-# testpogi = testpogi.o
-# testpogi: $(testpogi) 
-# 	$(CC) $(CCFLAGS) -o testpogi $(testpogi) $(CLIBS) $(FLIBS) $(GLIBS)
+$(BUILDDIR)/%.o: %.C
+	$(CC) $(CCFLAGS) -c $< -o $@
 
-# test the redistrubution to one processor
-# testDistribute = testDistribute.o 
-# testDistribute: $(testDistribute) 
-# 	$(CC) $(CCFLAGS) -o testDistribute $(testDistribute) $(CLIBS) $(FLIBS) $(GLIBS)
 
 # simplified interface for compiling user programs
 getFlags: $(Overture)/bin/makeGetFlags
@@ -268,12 +262,12 @@ getFlags: $(Overture)/bin/makeGetFlags
 	chmod u+x getFlags
 
 clean:  
-	rm -f $(PROGRAMS) *.o depend_date
+	rm -f $(PROGRAMS) $(BUILDDIR)/%.o $(DEPEND_DATE)
 
-depend_date: depend; perl $(Overture)/config/makeDepend -f depend -Y -- $(CC_INCLUDES_FOR_DEPEND) -- $(Source)
+$(DEPEND_DATE): $(DEPEND); perl $(Overture)/config/makeDepend -f $(DEPEND) -Y -- $(CC_INCLUDES_FOR_DEPEND) -- $(SOURCES)
 	touch $@
 # include the dependencies here
-include depend
+include $(DEPEND)
 
-.PRECIOUS: depend_date
+.PRECIOUS: $(DEPEND_DATE)
 

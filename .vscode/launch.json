@@ -8,7 +8,7 @@
             "name": "(gdb) Launch Shim In hdf to txt",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/overture-hyde-shim/src/gridShim",
+            "program": "/home/overture/overture-hyde-shim/build/gridShim",
             "args": 
             [
                 "/home/overture/overture-hyde-shim/overtureGrids/sqrInSqr.hdf", 
@@ -44,7 +44,7 @@
             "name": "(gdb) Launch Shim In hdf to hdf",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/overture-hyde-shim/src/gridShim",
+            "program": "/home/overture/overture-hyde-shim/build/gridShim",
             "args": 
             [
                 "/home/overture/overture-hyde-shim/overtureGrids/sqrInSqr.hdf", 
@@ -80,7 +80,7 @@
             "name": "(gdb) Launch Shim In txt to hdf",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/overture-hyde-shim/src/gridShim",
+            "program": "/home/overture/overture-hyde-shim/build/gridShim",
             "args": 
             [
                 "/home/overture/overture-hyde-shim/textOutput/debugTestTXT.txt", 
@@ -116,7 +116,7 @@
             "name": "(gdb) Launch gridPrint",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/overture/overture-hyde-shim/src/gridPrint",
+            "program": "/home/overture/overture-hyde-shim/build/gridPrint",
             "args": 
             [
                 "/home/overture/overture-hyde-shim/overtureGrids/sqrInSqr.hdf", 
@@ -124,7 +124,7 @@
             ],
             "stopAtEntry": false,
             "justMyCode": false,
-            "cwd": "/home/overture/overture-hyde-shim",
+            "cwd": "/home/overture/overture-hyde-shim/textOutput",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
