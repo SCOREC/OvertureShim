@@ -211,14 +211,17 @@ OGMGLIB = $(OV_RPATH)$(Overture)/lib $(LDFLAGS)$(Overture)/lib -lOgmg
 #    type `make' to make all examples
 #
 
-BUILDDIR = /home/overture/overture-hyde-shim/build
+BUILDDIR = ../build
 
 SOURCES = inAndOutHDF5.C gridShim.C HydeCompositeGrid.C HydeGridData.C HydeInterpData.C gridPrint.C
 # SOURCES = inAndOutHDF5.C inAndOut.C gridShim.C HydeCompositeGrid.C HydeGridData.C HydeInterpData.C gridPrint.C
-OBJECTS = $(patsubst %.C, $(BUILDDIR)/%.o, $(SOURCES))
+
+# OBJECTS = $(patsubst %.C, $(BUILDDIR)/%.o, $(SOURCES))
 
 # Here are the things we can make
-PROGRAMS = $(BUILDDIR)/gridShim $(BUILDDIR)/gridPrint
+PROGRAMS = $(BUILDDIR)/gridShim
+# PROGRAMS = $(BUILDDIR)/gridShim $(BUILDDIR)/gridPrint
+
 # DEPEND_DATE = $(addprefix $(BUILDDIR)/, depend_date)
 # OBJECTS = $(patsubst $(SOURCES), $(BUILDDIR)/%.o, $(SOURCES))
 DEPEND = $(BUILDDIR)/depend
@@ -239,9 +242,9 @@ dir:
 
 
 
-gridPrint := $(BUILDDIR)/gridPrint.o
-$(BUILDDIR)/gridPrint: $(gridPrint)
-	$(CC) $(CCFLAGS) -o $@ $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
+# gridPrint := $(BUILDDIR)/gridPrint.o
+# $(BUILDDIR)/gridPrint: $(gridPrint)
+# 	$(CC) $(CCFLAGS) -o $@ $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
 gridShim = $(BUILDDIR)/gridShim.o $(BUILDDIR)/inAndOutHDF5.o $(BUILDDIR)/HydeCompositeGrid.o $(BUILDDIR)/HydeGridData.o $(BUILDDIR)/HydeInterpData.o
 # gridShim = $(BUILDDIR)/gridShim.o $(BUILDDIR)/inAndOutHDF5.o $(BUILDDIR)/inAndOut.o $(BUILDDIR)/HydeCompositeGrid.o $(BUILDDIR)/HydeGridData.o $(BUILDDIR)/HydeInterpData.o
