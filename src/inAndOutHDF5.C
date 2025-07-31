@@ -13,8 +13,8 @@
 #include "H5Cpp.h"
 
 
-#include "Array3D.h"
 #include "Array2D.h"
+#include "Array3D.h"
 
 
 
@@ -39,8 +39,7 @@ using namespace H5;
 
 
 int sendToHDF5(   	std::string     		nameOfNewFile,
-                	HydeCompositeGrid 		*hydeCompositeGrid,
-                  	Array4D<double> 		*xy )
+                	HydeCompositeGrid 		*hydeCompositeGrid )
 {
 	try
 	{
@@ -76,7 +75,6 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 		////////////////////////////////////////////////////////////////////////////////////////
 		// Set numberOfComponentGrids //////////////////////////////////////////////////////////
-		
 		hsize_t     		numOfGridsIntSize[] 						= {1};
 		DataSpace   		numGridSpace( 1, numOfGridsIntSize );
 
@@ -99,26 +97,107 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 			// Create a grid group in the file.
 			Group 			group( compGridGroup.createGroup( "grid" + std::to_string( gridIndex ) ) );
+		
 
+			////////////////////////////////////////////////////////////////////////////////////////
+			// Set grid number ///////////////////////////////////////////////////////////////////
+			hsize_t     		gridNumIntSize[] 						= {1};
+			DataSpace   		gridNumSpace( 1, gridNumIntSize );
+
+			dataset 														= new 	DataSet( 
+																								group.createDataSet(  	"gridNumber", 
+																														PredType::NATIVE_INT, 
+																														gridNumSpace ) 
+																							);
+			dataset ->      write(  &( hydeGridData -> gridNumber ), 
+									PredType::NATIVE_INT );
+
+			delete 				dataset;
+			////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////
+		
+
+			////////////////////////////////////////////////////////////////////////////////////////
+			// Set useGhostPts ///////////////////////////////////////////////////////////////////
+			dataset 														= new 	DataSet( 
+																								group.createDataSet(  	"useGhostPts", 
+																														PredType::NATIVE_INT, 
+																														gridNumSpace ) 
+																							);
+			dataset ->      write(  &( hydeGridData -> useGhostPts ), 
+									PredType::NATIVE_INT );
+
+			delete 				dataset;
+			////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////
+		
+
+			////////////////////////////////////////////////////////////////////////////////////////
+			// Set grid dim ////////////////////////////////////////////////////////////////////////
+			dataset 														= new 	DataSet( 
+																								group.createDataSet(  	"gridDim", 
+																														PredType::NATIVE_INT, 
+																														gridNumSpace ) 
+																							);
+			dataset ->      write(  &( hydeGridData -> dim ), 
+									PredType::NATIVE_INT );
+
+			delete 				dataset;
+			////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////
+
+			////////////////////////////////////////////////////////////////////////////////////////
+			// Set grid spacing ////////////////////////////////////////////////////////////////////
+			hsize_t     		gridSpacingIntSize[] 					= {3};
+			DataSpace   		gridSpacingSpace( 1, gridSpacingIntSize );
+
+			dataset 														= new 	DataSet( 
+																								group.createDataSet(  	"gridSpacing", 
+																														PredType::NATIVE_DOUBLE, 
+																														gridSpacingSpace ) 
+																							);
+			dataset ->      write(  &( 	hydeGridData -> gridSpacing ), 
+										PredType::NATIVE_DOUBLE );
+
+			delete 				dataset;
+			////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set interior box /////////////////////////////////////////////////////////////////
 			hsize_t     	boxsize[] 					= {2, 3};
 			DataSpace   	boxspace( 2, boxsize );
 
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"numOfGhostPts", 
+																									PredType::NATIVE_INT, 
+																									boxspace ) 
+																		);
+			dataset ->      write(  &( hydeGridData -> numOfGhostPts ), 
+									PredType::NATIVE_INT );
 
-			// Not sure why this is needed for now...
-			// int 			grid_index_range_Placeholder[ 2 ][ 3 ];
-
-			// for ( int i = 0; i < 2; i++ )
-			// {
-			// 	for ( int j = 0; j < 3; j++ )
-			// 	{
-			// 		grid_index_range_Placeholder[ i ][ j ] 			= grid_index_range -> data[ gridIndex ][ i ][ j ];
-			// 	}
-			// }
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
 
 
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set interior box /////////////////////////////////////////////////////////////////
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"boundingBox", 
+																									PredType::NATIVE_DOUBLE, 
+																									boxspace ) 
+																		);
+			dataset ->      write(  &( hydeGridData -> boundingBox ), 
+									PredType::NATIVE_DOUBLE );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set interior box /////////////////////////////////////////////////////////////////
 			dataset 									= new 	DataSet( 
 																			group.createDataSet(  	"gridIndexRange", 
 																									PredType::NATIVE_INT, 
@@ -133,17 +212,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 
 			/////////////////////////////////////////////////////////////////////////////////////
-			// Set domain box ///////////////////////////////////////////////////////////////////
-			// Not sure why this is needed for now...
-			// int ext_index_range_Placeholder[ 2 ][ 3 ];
-			// for ( int i = 0; i < 2; i++ )
-			// {
-			// 	for ( int j = 0; j < 3; j++ )
-			// 	{
-			// 		ext_index_range_Placeholder[ i ][ j ] 			= ext_index_range -> data[ gridIndex ][ i ][ j ];
-			// 	}
-			// }
-
+			// Set extIndexRange ///////////////////////////////////////////////////////////////////
 			dataset 									= new 	DataSet( 
 																			group.createDataSet(  	"extIndexRange", 
 																									PredType::NATIVE_INT, 
@@ -165,16 +234,6 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																									PredType::NATIVE_INT, 
 																									boxspace ) 
 																		);
-
-			// Not sure why this is needed for now...
-			// int bcs_Placeholder[ 2 ][ 3 ];
-			// for ( int i = 0; i < 2; i++ )
-			// {
-			// 	for ( int j = 0; j < 3; j++ )
-			// 	{
-			// 		bcs_Placeholder[ i ][ j ] 			= bcs -> data[ gridIndex ][ i ][ j ];
-			// 	}
-			// }
 
 			dataset ->      write(  &( hydeGridData -> boundaryCondition ), 
 									PredType::NATIVE_INT );
@@ -249,7 +308,10 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 				{
 					for( int k = 0; k < hydeGridData -> dim; k++ )
 					{
-						xy_Placeholder[ i ][ j ][ k ] 			= xy -> data[ gridIndex ][ i ][ j ][ k ];
+						// xy_Placeholder[ i ][ j ][ k ] 			= xy -> data[ gridIndex ][ i ][ j ][ k ];
+						xy_Placeholder[ i ][ j ][ k ] 			= hydeGridData 
+																			-> xy 
+																				-> data[ i ][ j ][ k ];
 					}
 				}
 			}
@@ -291,8 +353,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 
 int getFromHDF5(    const char     			*fileName, 
-                    HydeCompositeGrid 		*hydeCompositeGrid,
-                    Array4D<double> 		*xy )
+                    HydeCompositeGrid 		*hydeCompositeGrid )
 {   
 	// Read in a CompositeGrid
 	aString 					nameOfOGFile      		= fileName;
@@ -307,8 +368,6 @@ int getFromHDF5(    const char     			*fileName,
 
 	int 		numOfDimensions       	= compositeGrid.numberOfDimensions();
 	// *numberOfDimensions       			= numOfDimensions;
-
-	xy              		->    allocate( numOfGrids, 0, 0, 0,              -1, -1, -1 );
 
 
 	// hydeCompositeGrid 					= new HydeCompositeGrid( 	fileName,
@@ -337,12 +396,18 @@ int getFromHDF5(    const char     			*fileName,
 
 		// Utilize Overture methods to easily retrieve data
 		MappedGrid 				&grid 					= compositeGrid[ gridIndex ];
-		grid.update( MappedGrid::THEvertex | MappedGrid::THEmask );  // create the vertex and mask arrays
+		grid.update( MappedGrid::THEvertex | MappedGrid::THEmask | MappedGrid::THEinverseVertexDerivative | MappedGrid::THEvertexJacobian );  // create the vertex and mask arrays
 
 		const IntegerArray 		&gridDimensions 		= grid.dimension();          // grid array dimensions
 		const IntegerArray 		&gridIndexRange 		= grid.gridIndexRange();
     	const IntegerArray 		&extIndexRange 			= grid.extendedIndexRange();
 		const IntegerArray 		&bc             		= grid.boundaryCondition();  // unused for now
+
+		const RealArray 		&det 					= grid.vertexJacobian(  ); // get the vertex jacobian determinant
+		const RealArray 		&rx 					= grid.inverseVertexDerivative();
+		// auto 					&gridMapping 			= grid.mapping();
+		// const mappingSpace 		&gridType 				= gridMapping.getRangeSpace();
+		// Mapping 				&mapping 				= gridMapping.getMapping();
 
     	const IntegerArray 		&numOfGhosts 			= grid.numberOfGhostPoints();
     	const Logical 			&useGhostPoints 		= grid.useGhostPoints();
@@ -367,25 +432,34 @@ int getFromHDF5(    const char     			*fileName,
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Set grid_index_range and ext_index_range /////////////////////////////////////////////////////////////////
+		hydeGridData
+			-> useGhostPts 							= useGhostPoints;
 		int 					ghostPtsCounter 	= 0;
 
 		for ( int j = 0; j < 3; j++ )
 		{
+			hydeGridData 
+				-> gridSpacing[ j ] 			= gridSpacing( j );
+			
+
             ghostPtsCounter                     = 0;
 
 			for ( int i = 0; i < 2; i++ )
 			{
 				hydeGridData 
-					-> gridIndexRange[ i ][ j ] 			= gridIndexRange( j, i );
+					-> boundingBox[ i ][ j ] 				= boundingBox( i, j );
 
 				hydeGridData 
-					-> extGridIndexRange[ i ][ j ] 			= extIndexRange( j, i );
+					-> gridIndexRange[ i ][ j ] 			= gridIndexRange( i, j );
 
 				hydeGridData 
-					-> numOfGhostPts[ i ][ j ] 				= numOfGhosts( j, i );
+					-> extGridIndexRange[ i ][ j ] 			= extIndexRange( i, j );
 
 				hydeGridData 
-					-> boundaryCondition[ i ][ j ]			= bc( j, i );
+					-> numOfGhostPts[ i ][ j ] 				= numOfGhosts( i, j );
+
+				hydeGridData 
+					-> boundaryCondition[ i ][ j ]			= bc( i, j );
 
                 ghostPtsCounter                             += hydeGridData -> numOfGhostPts[ i ][ j ];
 			}
@@ -441,9 +515,12 @@ int getFromHDF5(    const char     			*fileName,
 				-> arrayMask  
 					-> allocate( 	gridSize1, 
 									gridSize2 );
-		xy    
-				-> allocate( 	0, gridSize1, gridSize2, numOfDimensions,      
-								gridIndex, -1, -1 );
+
+		hydeGridData 
+				-> xy	
+					-> allocate( 	gridSize1, 
+									gridSize2, 
+									numOfDimensions );
 		
 
 		if(  ok  )  // if there are points on this processor
@@ -470,14 +547,14 @@ int getFromHDF5(    const char     			*fileName,
 				int 		index1 			= i1 - gridDimensions( 0, 0 );
 				int 		index2 			= i2 - gridDimensions( 0, 1 );
 
-				printf( "(%i, %i, %i), (%i, %i), %i ( i1, i2, i3, index1, index2, m )\n", 
-						i1, i2, i3, index1, index2, m );
+				// printf( "(%i, %i, %i), (%i, %i), %i ( i1, i2, i3, index1, index2, m )\n", 
+				// 		i1, i2, i3, index1, index2, m );
 
 				hydeGridData 
 					-> arrayMask  
 						-> data[ index1 ][ index2 ]   		= m;
 			}
-      		printf( "\n" );
+      		// printf( "\n" );
 			
 			const realArray 			&vertex 			= grid.vertex(  );
 			realSerialArray 			vertexLocal; 
@@ -491,43 +568,18 @@ int getFromHDF5(    const char     			*fileName,
 				int 		index1 			= i1 - gridDimensions( 0, 0 );
 				int 		index2 			= i2 - gridDimensions( 0, 1 );
 
-				printf( "(%i, %i, %i), (%i, %i) ( i1, i2, i3, index1, index2 )\n", 
-						i1, i2, i3, index1, index2 );
+				// printf( "(%i, %i, %i), (%i, %i) ( i1, i2, i3, index1, index2 )\n", 
+				// 		i1, i2, i3, index1, index2 );
 
-				if(  numOfDimensions == 2  )
+				for ( int k = 0; k < numOfDimensions; k++ )
 				{
-					xy -> data[ gridIndex ][ index1 ][ index2 ][ 0 ]  	= vertexLocal( i1, i2, i3, 0 );
-					xy -> data[ gridIndex ][ index1 ][ index2 ][ 1 ]  	= vertexLocal( i1, i2, i3, 1 );
-				}
-				else
-				{
-					xy -> data[ gridIndex ][ index1 ][ index2 ][ 0 ]  	= vertexLocal( i1, i2, i3, 0 );
-					xy -> data[ gridIndex ][ index1 ][ index2 ][ 1 ]  	= vertexLocal( i1, i2, i3, 1 );
-					xy -> data[ gridIndex ][ index1 ][ index2 ][ 2 ]  	= vertexLocal( i1, i2, i3, 2 );
+					hydeGridData 
+							-> xy 
+								-> data[ index1 ][ index2 ][ k ]  		= vertexLocal( i1, i2, i3, k );
 				}
 			}
-			printf( "\n" );
+			// printf( "\n" );
 		}
-
-		// for( int i = 0; i < hydeGridData -> NP[ 0 ]; i++ )
-		// {
-		// 	for( int j = 0; j < hydeGridData -> NP[ 1 ]; j++ )
-		// 	{
-		// 		hydeGridData 
-		// 			-> arrayMask  
-		// 				-> data[ i ][ j ]   		= maskLocal(  	i + gridDimensions( 0, 0 ), 
-		// 															j + gridDimensions( 0, 1 ), 
-		// 															k ) >= 0 ? 0: 1;
-
-		// 		for( int l = 0; l < numOfDimensions; l++ )
-		// 		{
-		// 			xy -> data[ gridIndex ][ i ][ j ][ l ]  	= vertexLocal(  i + gridDimensions( 0, 0 ), 
-		// 																		j + gridDimensions( 0, 1 ), 
-		// 																		k + gridDimensions( 0, 2 ), l );
-		// 		}
-
-		// 	}
-		// }
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		

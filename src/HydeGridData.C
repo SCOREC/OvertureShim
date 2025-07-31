@@ -2,7 +2,8 @@
 #include <stdexcept>
 
 #include "HydeGridData.h"
-#include "Array2D.h" // Assuming Array2D is defined in this header
+#include "Array2D.h"
+#include "Array3D.h"
 
 
 
@@ -13,6 +14,7 @@ HydeGridData::HydeGridData( int _gridNumber )
     ///////////////////////////////////////////////////////////////////
 	// Initialize mask. ///////////////////////////////////////////////
     arrayMask          		= new Array2D< int >();
+    xy          			= new Array3D< double >();
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
 

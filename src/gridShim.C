@@ -16,6 +16,7 @@
 #include <iostream>
 
 
+
 int startOverture( int argc, char *argv[] )
 {
     Overture::start( argc, argv );  
@@ -137,11 +138,6 @@ int main( int argc, char *argv[] )
     int                 	numOfComponentGrids;
     int                 	numberOfDimensions;
 
-    Array4D<double>     	*xy              		= new Array4D< double >(); // xy[numOfComponentGrids][ x ][ y ][ z ]
-    // Array3D<int>        	*grid_index_range    	= new Array3D< int >();    // Indices of interior points
-    // Array3D<int>        	*ext_index_range      	= new Array3D< int >();    // Indices of all points including ghost points
-    // Array3D<int>        	*desc            		= new Array3D< int >();
-    // Array3D<int>        	*bcs            		= new Array3D< int >();
 
 	HydeCompositeGrid 		*hydeCompositeGrid 		= new HydeCompositeGrid( nameOfOGFile, 1, 1 );
 
@@ -152,8 +148,7 @@ int main( int argc, char *argv[] )
     {
         // Read in a CompositeGrid data from hdf file
         int 	status 		= getFromHDF5(  nameOfOGFile,
-											hydeCompositeGrid, 
-											xy );
+											hydeCompositeGrid );
     }
     // else if ( *ogFileExtension == "txt" )
     // {
@@ -182,8 +177,7 @@ int main( int argc, char *argv[] )
     {
         // Write grid data to hdf file
         sendToHDF5(         saveLocation, 
-                            hydeCompositeGrid, 
-                            xy );
+                            hydeCompositeGrid );
     }
     // else if ( *newFileExtension == "txt" )
     // {
