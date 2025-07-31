@@ -213,7 +213,7 @@ OGMGLIB = $(OV_RPATH)$(Overture)/lib $(LDFLAGS)$(Overture)/lib -lOgmg
 
 BUILDDIR = /home/overture/overture-hyde-shim/build
 
-SOURCES = inAndOutHDF5.C inAndOut.C gridShim.C gridPrint.C
+SOURCES = inAndOutHDF5.C inAndOut.C gridShim.C HydeCompositeGrid.C HydeGridData.C HydeInterpData.C gridPrint.C
 OBJECTS = $(patsubst %.C, $(BUILDDIR)/%.o, $(SOURCES))
 
 # Here are the things we can make
@@ -242,7 +242,7 @@ gridPrint := $(BUILDDIR)/gridPrint.o
 $(BUILDDIR)/gridPrint: $(gridPrint)
 	$(CC) $(CCFLAGS) -o $@ $(gridPrint) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 
-gridShim = $(BUILDDIR)/gridShim.o $(BUILDDIR)/inAndOutHDF5.o $(BUILDDIR)/inAndOut.o
+gridShim = $(BUILDDIR)/gridShim.o $(BUILDDIR)/inAndOutHDF5.o $(BUILDDIR)/inAndOut.o $(BUILDDIR)/HydeCompositeGrid.o $(BUILDDIR)/HydeGridData.o $(BUILDDIR)/HydeInterpData.o
 $(BUILDDIR)/gridShim: $(gridShim)
 	$(CC) $(CCFLAGS) -o $@ $(gridShim) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
 

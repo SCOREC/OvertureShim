@@ -10,6 +10,7 @@
 
 #include "inAndOut.h"
 #include "inAndOutHDF5.h"
+#include "HydeCompositeGrid.h"
 
 #include <stdlib.h>
 #include <iostream>
@@ -133,14 +134,16 @@ int main( int argc, char *argv[] )
 
 
     // Initialize grid data 
-    int                 numOfComponentGrids;
-    int                 numberOfDimensions;
+    int                 	numOfComponentGrids;
+    int                 	numberOfDimensions;
 
-    Array4D<double>     *xy              		= new Array4D< double >(); // xy[numOfComponentGrids][ x ][ y ][ z ]
-    Array3D<int>        *grid_index_range    	= new Array3D< int >();    // Indices of interior points
-    Array3D<int>        *ext_index_range      	= new Array3D< int >();    // Indices of all points including ghost points
-    Array3D<int>        *desc            		= new Array3D< int >();
-    Array3D<int>        *bcs            		= new Array3D< int >();
+    Array4D<double>     	*xy              		= new Array4D< double >(); // xy[numOfComponentGrids][ x ][ y ][ z ]
+    // Array3D<int>        	*grid_index_range    	= new Array3D< int >();    // Indices of interior points
+    // Array3D<int>        	*ext_index_range      	= new Array3D< int >();    // Indices of all points including ghost points
+    // Array3D<int>        	*desc            		= new Array3D< int >();
+    // Array3D<int>        	*bcs            		= new Array3D< int >();
+
+	HydeCompositeGrid 		*hydeCompositeGrid 		= new HydeCompositeGrid( nameOfOGFile, 1, 1 );
 
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -149,26 +152,21 @@ int main( int argc, char *argv[] )
     {
         // Read in a CompositeGrid data from hdf file
         int 	status 		= getFromHDF5(  nameOfOGFile,
-											&numOfComponentGrids,
-											&numberOfDimensions, 
-											grid_index_range, 
-											ext_index_range,
-											bcs, 
-											xy,
-											desc );
+											hydeCompositeGrid, 
+											xy );
     }
-    else if ( *ogFileExtension == "txt" )
-    {
-        // Read in a CompositeGrid data from txt file
-        int 	status 		= getFromTextFile(  nameOfOGFile,
-												&numOfComponentGrids,
-												&numberOfDimensions, 
-												grid_index_range, 
-												ext_index_range,
-												bcs,
-												xy, 
-												desc );
-    }
+    // else if ( *ogFileExtension == "txt" )
+    // {
+    //     // Read in a CompositeGrid data from txt file
+    //     int 	status 		= getFromTextFile(  nameOfOGFile,
+	// 											&numOfComponentGrids,
+	// 											&numberOfDimensions, 
+	// 											grid_index_range, 
+	// 											ext_index_range,
+	// 											bcs,
+	// 											xy, 
+	// 											desc );
+    // }
     else
     {
         printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfOGFile );
@@ -184,26 +182,21 @@ int main( int argc, char *argv[] )
     {
         // Write grid data to hdf file
         sendToHDF5(         saveLocation, 
-                            numOfComponentGrids,
-                            numberOfDimensions, 
-                            grid_index_range, 
-                            ext_index_range,
-							bcs, 
-                            xy,
-                            desc );
+                            hydeCompositeGrid, 
+                            xy );
     }
-    else if ( *newFileExtension == "txt" )
-    {
-        // Write grid data to text file
-        sendToTextFile(     saveLocation, 
-                            numOfComponentGrids,
-                            numberOfDimensions, 
-                            grid_index_range, 
-                            ext_index_range,
-							bcs, 
-                            xy, 
-                            desc );
-    }
+    // else if ( *newFileExtension == "txt" )
+    // {
+    //     // Write grid data to text file
+    //     sendToTextFile(     saveLocation, 
+    //                         numOfComponentGrids,
+    //                         numberOfDimensions, 
+    //                         grid_index_range, 
+    //                         ext_index_range,
+	// 						bcs, 
+    //                         xy, 
+    //                         desc );
+    // }
     else
     {
         printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfNewFile );

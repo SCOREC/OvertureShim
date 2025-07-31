@@ -6,7 +6,16 @@
 #endif
 
 #include "inAndOutHDF5.h"
+#include "HydeCompositeGrid.h"
+#include "HydeGridData.h"
+#include "HydeInterpData.h"
+
 #include "H5Cpp.h"
+
+
+#include "Array3D.h"
+#include "Array2D.h"
+
 
 
 #ifndef H5_NO_NAMESPACE
@@ -29,14 +38,9 @@ using namespace H5;
 
 
 
-int sendToHDF5(   std::string     nameOfNewFile,
-                  int             numberOfComponentGrids, 
-                  int             numberOfDimensions,
-                  Array3D<int>    *grid_index_range, 
-                  Array3D<int>    *ext_index_range,
-                  Array3D<int>    *bcs, 
-                  Array4D<double> *xy, 
-                  Array3D<int>    *mask )
+int sendToHDF5(   	std::string     		nameOfNewFile,
+                	HydeCompositeGrid 		*hydeCompositeGrid,
+                  	Array4D<double> 		*xy )
 {
 	try
 	{
@@ -45,7 +49,7 @@ int sendToHDF5(   std::string     nameOfNewFile,
 		
 
 		// Create a group for the composite grid in the file.
-		Group 				compGridGroup( file->createGroup( "/composite_grid") );
+		Group 				compGridGroup( file->createGroup( "/compositeGrid") );
 
 		// Create dataspace for dataset in file.
 		DataSet   			*dataset;
@@ -61,7 +65,8 @@ int sendToHDF5(   std::string     nameOfNewFile,
 																												PredType::NATIVE_INT, 
 																												dimSpace ) 
 																			);
-		dataset ->      write(  &numberOfDimensions, 
+
+		dataset ->      write(  &( hydeCompositeGrid -> dimOfProblem ), 
 								PredType::NATIVE_INT );
 
 		delete 				dataset;
@@ -76,11 +81,11 @@ int sendToHDF5(   std::string     nameOfNewFile,
 		DataSpace   		numGridSpace( 1, numOfGridsIntSize );
 
 		dataset 														= new 	DataSet( 
-																							compGridGroup.createDataSet(  	"num_of_component_grids", 
+																							compGridGroup.createDataSet(  	"numOfGrids", 
 																															PredType::NATIVE_INT, 
 																															numGridSpace ) 
 																						);
-		dataset ->      write(  &numberOfComponentGrids, 
+		dataset ->      write(  &( hydeCompositeGrid -> numOfGrids ), 
 								PredType::NATIVE_INT );
 
 		delete 				dataset;
@@ -88,10 +93,12 @@ int sendToHDF5(   std::string     nameOfNewFile,
 		////////////////////////////////////////////////////////////////////////////////////////
 
 
-		for ( int gridIndex = 0; gridIndex < numberOfComponentGrids; gridIndex++ )
+		for ( int gridIndex = 0; gridIndex < hydeCompositeGrid -> numOfGrids; gridIndex++ )
 		{
+			HydeGridData 	*hydeGridData 				= hydeCompositeGrid -> hydeGridData[ gridIndex ];
+
 			// Create a grid group in the file.
-			Group 			group( compGridGroup.createGroup( "grid_" + std::to_string( gridIndex ) ) );
+			Group 			group( compGridGroup.createGroup( "grid" + std::to_string( gridIndex ) ) );
 
 
 			/////////////////////////////////////////////////////////////////////////////////////
@@ -99,23 +106,25 @@ int sendToHDF5(   std::string     nameOfNewFile,
 			hsize_t     	boxsize[] 					= {2, 3};
 			DataSpace   	boxspace( 2, boxsize );
 
+
 			// Not sure why this is needed for now...
-			int grid_index_range_Placeholder[ 2 ][ 3 ];
-			for ( int i = 0; i < 2; i++ )
-			{
-				for ( int j = 0; j < 3; j++ )
-				{
-					grid_index_range_Placeholder[ i ][ j ] 			= grid_index_range -> data[ gridIndex ][ i ][ j ];
-				}
-			}
+			// int 			grid_index_range_Placeholder[ 2 ][ 3 ];
+
+			// for ( int i = 0; i < 2; i++ )
+			// {
+			// 	for ( int j = 0; j < 3; j++ )
+			// 	{
+			// 		grid_index_range_Placeholder[ i ][ j ] 			= grid_index_range -> data[ gridIndex ][ i ][ j ];
+			// 	}
+			// }
 
 
 			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"grid_index_range", 
+																			group.createDataSet(  	"gridIndexRange", 
 																									PredType::NATIVE_INT, 
 																									boxspace ) 
 																		);
-			dataset ->      write(  &grid_index_range_Placeholder, 
+			dataset ->      write(  &( hydeGridData -> gridIndexRange ), 
 									PredType::NATIVE_INT );
 
 			delete 			dataset;
@@ -126,22 +135,22 @@ int sendToHDF5(   std::string     nameOfNewFile,
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set domain box ///////////////////////////////////////////////////////////////////
 			// Not sure why this is needed for now...
-			int ext_index_range_Placeholder[ 2 ][ 3 ];
-			for ( int i = 0; i < 2; i++ )
-			{
-				for ( int j = 0; j < 3; j++ )
-				{
-					ext_index_range_Placeholder[ i ][ j ] 			= ext_index_range -> data[ gridIndex ][ i ][ j ];
-				}
-			}
+			// int ext_index_range_Placeholder[ 2 ][ 3 ];
+			// for ( int i = 0; i < 2; i++ )
+			// {
+			// 	for ( int j = 0; j < 3; j++ )
+			// 	{
+			// 		ext_index_range_Placeholder[ i ][ j ] 			= ext_index_range -> data[ gridIndex ][ i ][ j ];
+			// 	}
+			// }
 
 			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"ext_index_range", 
+																			group.createDataSet(  	"extIndexRange", 
 																									PredType::NATIVE_INT, 
 																									boxspace ) 
 																		);
 
-			dataset ->      write(  &ext_index_range_Placeholder, 
+			dataset ->      write(  &( hydeGridData -> extGridIndexRange ), 
 									PredType::NATIVE_INT );
 
 			delete 			dataset;
@@ -152,22 +161,58 @@ int sendToHDF5(   std::string     nameOfNewFile,
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set bcs //////////////////////////////////////////////////////////////////////////
 			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"bcs", 
+																			group.createDataSet(  	"boundaryCondition", 
 																									PredType::NATIVE_INT, 
 																									boxspace ) 
 																		);
 
 			// Not sure why this is needed for now...
-			int bcs_Placeholder[ 2 ][ 3 ];
-			for ( int i = 0; i < 2; i++ )
+			// int bcs_Placeholder[ 2 ][ 3 ];
+			// for ( int i = 0; i < 2; i++ )
+			// {
+			// 	for ( int j = 0; j < 3; j++ )
+			// 	{
+			// 		bcs_Placeholder[ i ][ j ] 			= bcs -> data[ gridIndex ][ i ][ j ];
+			// 	}
+			// }
+
+			dataset ->      write(  &( hydeGridData -> boundaryCondition ), 
+									PredType::NATIVE_INT );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set mask /////////////////////////////////////////////////////////////////////////
+			int 			maskDim1 					= hydeGridData -> arrayMask -> rows;
+			int 			maskDim2 					= hydeGridData -> arrayMask -> cols;
+
+			hsize_t   		gridsize2[] 				= { static_cast<hsize_t>(maskDim1), 
+															static_cast<hsize_t>(maskDim2) };
+
+			DataSpace   	maskspace( 2, gridsize2 );
+
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"arrayMask", 
+																									PredType::NATIVE_INT, 
+																									maskspace ) 
+																		);
+
+			// Not sure why this is needed for now...
+			int mask_Placeholder[ maskDim1 ][ maskDim2 ];
+
+			for( int i = 0; i < ( maskDim1 ); i++ )
 			{
-				for ( int j = 0; j < 3; j++ )
+				for( int j = 0; j < ( maskDim2 ); j++ )
 				{
-					bcs_Placeholder[ i ][ j ] 			= bcs -> data[ gridIndex ][ i ][ j ];
+					mask_Placeholder[ i ][ j ] 			= hydeGridData -> arrayMask -> data[ i ][ j ];
 				}
 			}
 
-			dataset ->      write(  &bcs_Placeholder, 
+
+			dataset ->      write(  &( mask_Placeholder ), 
 									PredType::NATIVE_INT );
 
 			delete 			dataset;
@@ -177,16 +222,16 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set xy ///////////////////////////////////////////////////////////////////////////
-			int 			nx  						=   	ext_index_range -> data[ gridIndex ][ 1 ][ 0 ] 
-															- 	ext_index_range -> data[ gridIndex ][ 0 ][ 0 ];
-			int 			ny  						=   	ext_index_range -> data[ gridIndex ][ 1 ][ 1 ] 
-															- 	ext_index_range -> data[ gridIndex ][ 0 ][ 1 ];
+			int 			nx  						=   	hydeGridData -> extGridIndexRange[ 1 ][ 0 ] 
+															- 	hydeGridData -> extGridIndexRange[ 0 ][ 0 ];
+			int 			ny  						=   	hydeGridData -> extGridIndexRange[ 1 ][ 1 ] 
+															- 	hydeGridData -> extGridIndexRange[ 0 ][ 1 ];
 			
-			hsize_t   		gridsize1[] 				= { static_cast<hsize_t> ( nx + 1 ), 
-															static_cast<hsize_t> ( ny + 1 ), 
-															static_cast<hsize_t> ( numberOfDimensions ) };
+			hsize_t   		gridsize1[] 				= { static_cast<hsize_t> ( maskDim1 ), 
+															static_cast<hsize_t> ( maskDim2 ), 
+															static_cast<hsize_t> ( hydeGridData -> dim ) };
 
-			DataSpace 		xyspace(  	numberOfDimensions + 1, 
+			DataSpace 		xyspace(  	hydeGridData -> dim + 1, 
 										gridsize1 );
 			
 			dataset 									= new 	DataSet( 
@@ -196,13 +241,13 @@ int sendToHDF5(   std::string     nameOfNewFile,
 																		);
 
 			// Not sure why this is needed for now...
-			double xy_Placeholder[ nx + 1 ][ ny + 1 ][ numberOfDimensions ];
+			double 		xy_Placeholder[ maskDim1 ][ maskDim2 ][ hydeGridData -> dim ];
 
-			for( int i = 0; i < nx + 1; i++ )
+			for( int i = 0; i < ( maskDim1 ); i++ )
 			{
-				for( int j = 0; j < ny + 1; j++ )
+				for( int j = 0; j < ( maskDim2 ); j++ )
 				{
-					for( int k = 0; k < numberOfDimensions; k++ )
+					for( int k = 0; k < hydeGridData -> dim; k++ )
 					{
 						xy_Placeholder[ i ][ j ][ k ] 			= xy -> data[ gridIndex ][ i ][ j ][ k ];
 					}
@@ -212,39 +257,6 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 			dataset ->      write(  &xy_Placeholder, 
 									PredType::NATIVE_DOUBLE );
-
-			delete 			dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
-
-
-			/////////////////////////////////////////////////////////////////////////////////////
-			// Set mask /////////////////////////////////////////////////////////////////////////
-			hsize_t   		gridsize2[] 				= { static_cast<hsize_t>(nx + 1), 
-															static_cast<hsize_t>(ny + 1) };
-
-			DataSpace   	maskspace( 2, gridsize2 );
-
-			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"mask", 
-																									PredType::NATIVE_HBOOL, 
-																									maskspace ) 
-																		);
-
-			// Not sure why this is needed for now...
-			int mask_Placeholder[ nx + 1 ][ ny + 1 ];
-
-			for( int i = 0; i < nx + 1; i++ )
-			{
-				for( int j = 0; j < ny + 1; j++ )
-				{
-					mask_Placeholder[ i ][ j ] 			= mask -> data[ gridIndex ][ i ][ j ];
-				}
-			}
-
-
-			dataset ->      write(  &mask_Placeholder, 
-									PredType::NATIVE_INT );
 
 			delete 			dataset;
 			/////////////////////////////////////////////////////////////////////////////////////
@@ -278,14 +290,9 @@ int sendToHDF5(   std::string     nameOfNewFile,
 
 
 
-int getFromHDF5(    const char*     fileName, 
-                    int             *numberOfComponentGrids, 
-                    int             *numberOfDimensions,
-                    Array3D<int>    *grid_index_range, 
-                    Array3D<int>    *ext_index_range,
-                  	Array3D<int>    *bcs, 
-                    Array4D<double> *xy, 
-                    Array3D<int>    *desc )
+int getFromHDF5(    const char     			*fileName, 
+                    HydeCompositeGrid 		*hydeCompositeGrid,
+                    Array4D<double> 		*xy )
 {   
 	// Read in a CompositeGrid
 	aString 					nameOfOGFile      		= fileName;
@@ -296,19 +303,27 @@ int getFromHDF5(    const char*     fileName,
 	/////////////////////////////////////////////////////////////////////////////////
 	// Initialize number of component grids and dimension of grid data /////////////
 	int 		numOfGrids        		= compositeGrid.numberOfComponentGrids();
-	*numberOfComponentGrids   			= numOfGrids;
+	// *numberOfComponentGrids   			= numOfGrids;
 
 	int 		numOfDimensions       	= compositeGrid.numberOfDimensions();
-	*numberOfDimensions       			= numOfDimensions;
+	// *numberOfDimensions       			= numOfDimensions;
 
-	// Allocate space where possible for grid data
-	grid_index_range    	->    allocate( numOfGrids, 3, numOfDimensions,   -1, -1 );
-	ext_index_range      	->    allocate( numOfGrids, 3, numOfDimensions,   -1, -1 );
-	bcs 					->    allocate( numOfGrids, 3, numOfDimensions,   -1, -1 );
 	xy              		->    allocate( numOfGrids, 0, 0, 0,              -1, -1, -1 );
-	desc            		->    allocate( numOfGrids, 0, 0,                 -1, -1 );
-	/////////////////////////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////
+
+
+	// hydeCompositeGrid 					= new HydeCompositeGrid( 	fileName,
+	// 																numOfGrids, 
+	// 																numOfDimensions );
+	
+	hydeCompositeGrid 
+		-> numOfGrids 					= numOfGrids;
+	hydeCompositeGrid 
+		-> dimOfProblem 				= numOfDimensions;
+
+	// Instantiate numOfGrids GridData objects for this CompositeGrid
+	hydeCompositeGrid 
+		-> hydeGridData            		= new HydeGridData*  [ numOfGrids ];						
+
 
 	
 	// Get number of interp pts from CompositeGrid
@@ -316,6 +331,10 @@ int getFromHDF5(    const char*     fileName,
 	
 	for ( int gridIndex = 0; gridIndex < numOfGrids; gridIndex++ )
 	{
+		HydeGridData 			*hydeGridData 			= new HydeGridData( gridIndex );
+		hydeGridData -> dim    							= numOfDimensions;
+
+
 		// Utilize Overture methods to easily retrieve data
 		MappedGrid 				&grid 					= compositeGrid[ gridIndex ];
 		grid.update( MappedGrid::THEvertex | MappedGrid::THEmask );  // create the vertex and mask arrays
@@ -344,36 +363,45 @@ int getFromHDF5(    const char*     fileName,
 				bc( 0, 0 ), bc( 1, 0 ), bc( 0, 1 ), bc( 1, 1 ), bc( 0, 2 ), bc( 1, 2 ),
 				grid.isPeriodic(0)    , grid.isPeriodic(1)    , grid.isPeriodic(2) );
 		
-		
-		const intArray 			&mask 				= grid.mask();
-		intSerialArray 			maskLocal; 
-
-		// local array on this processor
-		getLocalArrayWithGhostBoundaries( mask, maskLocal );  
-		const realArray 		&vertex 			= grid.vertex();
-		realSerialArray 		vertexLocal; 
-
-		// local array on this processor
-		getLocalArrayWithGhostBoundaries( vertex, vertexLocal );   
-		// Note that k below is just 0, not a real loop index. Only one Z index.
-		int 					k       			= vertexLocal.getBase( 3 );
 
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Set grid_index_range and ext_index_range /////////////////////////////////////////////////////////////////
-		for ( int i = 0; i < 2; i++ )
+		int 					ghostPtsCounter 	= 0;
+
+		for ( int j = 0; j < 3; j++ )
 		{
-			for ( int j = 0; j < 3; j++ )
+            ghostPtsCounter                     = 0;
+
+			for ( int i = 0; i < 2; i++ )
 			{
-				grid_index_range 	-> data[ gridIndex ][ i ][ j ] 		= gridIndexRange( i, j );
-				ext_index_range   	-> data[ gridIndex ][ i ][ j ] 		= extIndexRange( i, j );
-				bcs		  			-> data[ gridIndex ][ i ][ j ] 		= bc( i, j );
+				hydeGridData 
+					-> gridIndexRange[ i ][ j ] 			= gridIndexRange( j, i );
+
+				hydeGridData 
+					-> extGridIndexRange[ i ][ j ] 			= extIndexRange( j, i );
+
+				hydeGridData 
+					-> numOfGhostPts[ i ][ j ] 				= numOfGhosts( j, i );
+
+				hydeGridData 
+					-> boundaryCondition[ i ][ j ]			= bc( j, i );
+
+                ghostPtsCounter                             += hydeGridData -> numOfGhostPts[ i ][ j ];
 			}
+
+            // Set numbers of relevant grid pts data.
+            hydeGridData -> N[ j ]                  = (     gridDimensions( 1, j )
+                                                    	-   gridDimensions( 0, j )    )   +   1;
+
+            hydeGridData -> NP[ j ]                 = hydeGridData -> N[ j ]      +   ghostPtsCounter;
 		}
 		
 		// Print grid_index_range for verification
-		std::cout 	<< ext_index_range -> data[ gridIndex ][ 0 ][ 0 ] << " " << ext_index_range -> data[ gridIndex ][ 0 ][ 1 ] << " " 
-					<< ext_index_range -> data[ gridIndex ][ 1 ][ 0 ] << " " << ext_index_range -> data[ gridIndex ][ 1 ][ 1 ] << " " 
+		std::cout 	<< hydeGridData -> extGridIndexRange[ 0 ][ 0 ] << " " 
+					<< hydeGridData -> extGridIndexRange[ 0 ][ 1 ] << " " 
+					<< hydeGridData -> extGridIndexRange[ 1 ][ 0 ] << " " 
+					<< hydeGridData -> extGridIndexRange[ 1 ][ 1 ] << " " 
 					<< std::endl;
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -381,33 +409,132 @@ int getFromHDF5(    const char*     fileName,
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Set desc, xy, and mask //////////////////////////////////////////////////////////////////////////////
-		int 	nx      = gridDimensions( 1, 0 ) - gridDimensions( 0, 0 );
-		int 	ny      = gridDimensions( 1, 1 ) - gridDimensions( 0, 1 );
+				
+		Index 					I1, I2, I3;
+		getIndex( grid.dimension(  ), I1, I2, I3 );
+		int 					i1, i2, i3;
 
-		// Allocate space for gridIndex'th grid in desc and xy
-		desc  -> allocate( 0, ( nx + 1 ), ( ny + 1 ),                       gridIndex, -1 );
-		xy    -> allocate( 0, ( nx + 1 ), ( ny + 1 ), numOfDimensions,      gridIndex, -1, -1 );
+		const intArray 			&mask 				= grid.mask();
+		intSerialArray 			maskLocal; 
+		// local array on this processor
+		getLocalArrayWithGhostBoundaries( mask, maskLocal );  
+
+		int 					includeGhost 		= 0;
+		bool 					ok 					= ParallelUtility::getLocalArrayBounds( mask, maskLocal, 
+																							I1, I2, I3, 
+																							includeGhost );  // get bounds of the local array ( no ghost )
+
+
+		// const realArray 		&vertex 			= grid.vertex();
+		// realSerialArray 		vertexLocal; 
+		// local array on this processor
+		// getLocalArrayWithGhostBoundaries( vertex, vertexLocal );   
+		// Note that k below is just 0, not a real loop index. Only one Z index.
+		// int 					k       			= vertexLocal.getBase( 3 );
 		
-		for( int i = 0; i < nx + 1; i++ )
-		{
-			for( int j = 0; j < ny + 1; j++ )
-			{
-				desc -> data[ gridIndex ][ i ][ j ]   		= maskLocal(  	i + gridDimensions( 0, 0 ), 
-																			j + gridDimensions( 0, 1 ), 
-																			k ) >= 0 ? -1: 1;
+		
+		// Allocate space for gridIndex'th grid in desc and xy
+		int 		gridSize1 			= ( I1.getBound() - gridDimensions( 0, 0 ) ) - ( I1.getBase() - gridDimensions( 0, 0 ) ) + 1;
+		int 		gridSize2 			= ( I2.getBound() - gridDimensions( 0, 1 ) ) - ( I2.getBase() - gridDimensions( 0, 1 ) ) + 1;
 
-				for( int l = 0; l < numOfDimensions; l++ )
+		hydeGridData 
+				-> arrayMask  
+					-> allocate( 	gridSize1, 
+									gridSize2 );
+		xy    
+				-> allocate( 	0, gridSize1, gridSize2, numOfDimensions,      
+								gridIndex, -1, -1 );
+		
+
+		if(  ok  )  // if there are points on this processor
+		{
+			printf( "mask ( based on the dimension array,  -1=interp,  0=not used,  1=used )\n" );
+
+			FOR_3D( i1, i2, i3, I1, I2, I3 )
+			{
+				int 			m 					= maskLocal( i1, i2, i3 );
+
+				if(  m < 0  )
 				{
-					xy -> data[ gridIndex ][ i ][ j ][ l ]  	= vertexLocal(  i + gridDimensions( 0, 0 ), 
-																				j + gridDimensions( 0, 1 ), 
-																				k + gridDimensions( 0, 2 ), l );
+					m 	= -1;   // interpolation point
+				}
+				else if(  m > 0  )
+				{
+					m 	= 1;    // discretization point 
+				}
+				else
+				{
+					m 	= 0;    // not used point
 				}
 
+				int 		index1 			= i1 - gridDimensions( 0, 0 );
+				int 		index2 			= i2 - gridDimensions( 0, 1 );
+
+				printf( "(%i, %i, %i), (%i, %i), %i ( i1, i2, i3, index1, index2, m )\n", 
+						i1, i2, i3, index1, index2, m );
+
+				hydeGridData 
+					-> arrayMask  
+						-> data[ index1 ][ index2 ]   		= m;
 			}
+      		printf( "\n" );
+			
+			const realArray 			&vertex 			= grid.vertex(  );
+			realSerialArray 			vertexLocal; 
+			getLocalArrayWithGhostBoundaries( vertex, vertexLocal );          // local array on this processor
+
+
+			printf( "vertex ( based on the dimension array )\n" );
+
+			FOR_3( i1, i2, i3, I1, I2, I3 )
+			{
+				int 		index1 			= i1 - gridDimensions( 0, 0 );
+				int 		index2 			= i2 - gridDimensions( 0, 1 );
+
+				printf( "(%i, %i, %i), (%i, %i) ( i1, i2, i3, index1, index2 )\n", 
+						i1, i2, i3, index1, index2 );
+
+				if(  numOfDimensions == 2  )
+				{
+					xy -> data[ gridIndex ][ index1 ][ index2 ][ 0 ]  	= vertexLocal( i1, i2, i3, 0 );
+					xy -> data[ gridIndex ][ index1 ][ index2 ][ 1 ]  	= vertexLocal( i1, i2, i3, 1 );
+				}
+				else
+				{
+					xy -> data[ gridIndex ][ index1 ][ index2 ][ 0 ]  	= vertexLocal( i1, i2, i3, 0 );
+					xy -> data[ gridIndex ][ index1 ][ index2 ][ 1 ]  	= vertexLocal( i1, i2, i3, 1 );
+					xy -> data[ gridIndex ][ index1 ][ index2 ][ 2 ]  	= vertexLocal( i1, i2, i3, 2 );
+				}
+			}
+			printf( "\n" );
 		}
+
+		// for( int i = 0; i < hydeGridData -> NP[ 0 ]; i++ )
+		// {
+		// 	for( int j = 0; j < hydeGridData -> NP[ 1 ]; j++ )
+		// 	{
+		// 		hydeGridData 
+		// 			-> arrayMask  
+		// 				-> data[ i ][ j ]   		= maskLocal(  	i + gridDimensions( 0, 0 ), 
+		// 															j + gridDimensions( 0, 1 ), 
+		// 															k ) >= 0 ? 0: 1;
+
+		// 		for( int l = 0; l < numOfDimensions; l++ )
+		// 		{
+		// 			xy -> data[ gridIndex ][ i ][ j ][ l ]  	= vertexLocal(  i + gridDimensions( 0, 0 ), 
+		// 																		j + gridDimensions( 0, 1 ), 
+		// 																		k + gridDimensions( 0, 2 ), l );
+		// 		}
+
+		// 	}
+		// }
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
+
+		hydeCompositeGrid 
+				-> hydeGridData[ gridIndex ] 			= hydeGridData;
+
 
 		// destroy arrays to save space
 		grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  
