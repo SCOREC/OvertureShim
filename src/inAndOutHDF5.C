@@ -15,6 +15,7 @@
 
 #include "Array2D.h"
 #include "Array3D.h"
+#include "Array4D.h"
 
 
 
@@ -35,6 +36,22 @@ using namespace H5;
     for( i3 = I3Base; i3 <= I3Bound; i3++ ) \
     for( i2 = I2Base; i2 <= I2Bound; i2++ ) \
     for( i1 = I1Base; i1 <= I1Bound; i1++ )
+
+#undef  RXI
+#define RXI(I1,I2,I3,var,dir)  ( rx( I1, I2, I3, numOfDimensions * dir + var ) )
+// #define RXI(I1,I2,I3,dir)  (inverseVertexDerivative(I1,I2,I3, 3 * dir + 0))
+// #define SXI(I1,I2,I3,dir)  (inverseVertexDerivative(I1,I2,I3, 3 * dir + 1))
+// #define TXI(I1,I2,I3,dir)  (inverseVertexDerivative(I1,I2,I3, 3 * dir + 2))
+
+// #define RX(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,0)
+// #define SX(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,1)
+// #define TX(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,2)
+// #define RY(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,0+numberOfDimensions)
+// #define SY(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,1+numberOfDimensions)
+// #define TY(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,5)
+// #define RZ(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,6)
+// #define SZ(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,7)
+// #define TZ(I1,I2,I3) inverseVertexDerivative(I1,I2,I3,8)
 
 
 
@@ -134,12 +151,13 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 			////////////////////////////////////////////////////////////////////////////////////////
 			// Set grid dim ////////////////////////////////////////////////////////////////////////
+			int 				numOfDimensions 							= hydeGridData -> dim;
 			dataset 														= new 	DataSet( 
 																								group.createDataSet(  	"gridDim", 
 																														PredType::NATIVE_INT, 
 																														gridNumSpace ) 
 																							);
-			dataset ->      write(  &( hydeGridData -> dim ), 
+			dataset ->      write(  &numOfDimensions, 
 									PredType::NATIVE_INT );
 
 			delete 				dataset;
@@ -281,16 +299,11 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set xy ///////////////////////////////////////////////////////////////////////////
-			int 			nx  						=   	hydeGridData -> extGridIndexRange[ 1 ][ 0 ] 
-															- 	hydeGridData -> extGridIndexRange[ 0 ][ 0 ];
-			int 			ny  						=   	hydeGridData -> extGridIndexRange[ 1 ][ 1 ] 
-															- 	hydeGridData -> extGridIndexRange[ 0 ][ 1 ];
-			
 			hsize_t   		gridsize1[] 				= { static_cast<hsize_t> ( maskDim1 ), 
 															static_cast<hsize_t> ( maskDim2 ), 
-															static_cast<hsize_t> ( hydeGridData -> dim ) };
+															static_cast<hsize_t> ( numOfDimensions ) };
 
-			DataSpace 		xyspace(  	hydeGridData -> dim + 1, 
+			DataSpace 		xyspace(  	numOfDimensions + 1, 
 										gridsize1 );
 			
 			dataset 									= new 	DataSet( 
@@ -300,13 +313,13 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																		);
 
 			// Not sure why this is needed for now...
-			double 		xy_Placeholder[ maskDim1 ][ maskDim2 ][ hydeGridData -> dim ];
+			double 		xy_Placeholder[ maskDim1 ][ maskDim2 ][ numOfDimensions ];
 
 			for( int i = 0; i < ( maskDim1 ); i++ )
 			{
 				for( int j = 0; j < ( maskDim2 ); j++ )
 				{
-					for( int k = 0; k < hydeGridData -> dim; k++ )
+					for( int k = 0; k < numOfDimensions; k++ )
 					{
 						// xy_Placeholder[ i ][ j ][ k ] 			= xy -> data[ gridIndex ][ i ][ j ][ k ];
 						xy_Placeholder[ i ][ j ][ k ] 			= hydeGridData 
@@ -318,6 +331,50 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 
 			dataset ->      write(  &xy_Placeholder, 
+									PredType::NATIVE_DOUBLE );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set xy ///////////////////////////////////////////////////////////////////////////
+			hsize_t   		gridsize3[] 				= { static_cast<hsize_t> ( maskDim1 ), 
+															static_cast<hsize_t> ( maskDim2 ), 
+															static_cast<hsize_t> ( numOfDimensions), 
+															static_cast<hsize_t> ( numOfDimensions ) };
+
+			DataSpace 		rxSpace(  	numOfDimensions + 1, 
+										gridsize3 );
+			
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"rx", 
+																									PredType::NATIVE_DOUBLE, 
+																									rxSpace ) 
+																		);
+
+			// Not sure why this is needed for now...
+			double 		rx_Placeholder[ maskDim1 ][ maskDim2 ][ numOfDimensions ][ numOfDimensions ];
+
+			for( int i = 0; i < ( maskDim1 ); i++ )
+			{
+				for( int j = 0; j < ( maskDim2 ); j++ )
+				{
+					for( int k = 0; k < numOfDimensions; k++ )
+					{
+						for( int l = 0; l < numOfDimensions; l++ )
+						{
+							rx_Placeholder[ i ][ j ][ k ][ l ] 		= hydeGridData 
+																			-> rx 
+																				-> data[ i ][ j ][ k ][ l ];
+						}
+					}
+				}
+			}
+
+
+			dataset ->      write(  &rx_Placeholder, 
 									PredType::NATIVE_DOUBLE );
 
 			delete 			dataset;
@@ -396,7 +453,10 @@ int getFromHDF5(    const char     			*fileName,
 
 		// Utilize Overture methods to easily retrieve data
 		MappedGrid 				&grid 					= compositeGrid[ gridIndex ];
-		grid.update( MappedGrid::THEvertex | MappedGrid::THEmask | MappedGrid::THEinverseVertexDerivative | MappedGrid::THEvertexJacobian );  // create the vertex and mask arrays
+		grid.update( 	MappedGrid::THEvertex 
+					| 	MappedGrid::THEmask 
+					| 	MappedGrid::THEinverseVertexDerivative 
+					| 	MappedGrid::THEvertexJacobian );  // create the vertex and mask arrays
 
 		const IntegerArray 		&gridDimensions 		= grid.dimension();          // grid array dimensions
 		const IntegerArray 		&gridIndexRange 		= grid.gridIndexRange();
@@ -405,9 +465,7 @@ int getFromHDF5(    const char     			*fileName,
 
 		const RealArray 		&det 					= grid.vertexJacobian(  ); // get the vertex jacobian determinant
 		const RealArray 		&rx 					= grid.inverseVertexDerivative();
-		// auto 					&gridMapping 			= grid.mapping();
-		// const mappingSpace 		&gridType 				= gridMapping.getRangeSpace();
-		// Mapping 				&mapping 				= gridMapping.getMapping();
+		const RealArray 		&rx_inv 				= grid.vertexDerivative();
 
     	const IntegerArray 		&numOfGhosts 			= grid.numberOfGhostPoints();
     	const Logical 			&useGhostPoints 		= grid.useGhostPoints();
@@ -521,6 +579,22 @@ int getFromHDF5(    const char     			*fileName,
 					-> allocate( 	gridSize1, 
 									gridSize2, 
 									numOfDimensions );
+
+		hydeGridData 
+				-> rx	
+					-> allocate( 	gridSize1, 
+									gridSize2, 
+									numOfDimensions );
+		hydeGridData
+				-> rx -> setIdentity();  // initialize to zero
+
+		// hydeGridData 
+		// 		-> rx_inv	
+		// 			-> allocate( 	gridSize1, 
+		// 							gridSize2, 
+		// 							numOfDimensions );
+		// hydeGridData
+		// 		-> rx_inv -> setIdentity();  // initialize to zero
 		
 
 		if(  ok  )  // if there are points on this processor
@@ -577,6 +651,20 @@ int getFromHDF5(    const char     			*fileName,
 							-> xy 
 								-> data[ index1 ][ index2 ][ k ]  		= vertexLocal( i1, i2, i3, k );
 				}
+
+				for ( int dir = 0; dir < numOfDimensions; dir++ ) // x, y, z
+				{
+					for ( int var = 0; var < numOfDimensions; var++ ) // r, s, t
+					{
+						hydeGridData 
+								-> rx 
+									-> data[ index1 ][ index2 ][ dir ][ var ] 		= RXI( i1, i2, i3, var , dir);
+						// hydeGridData 
+						// 		-> rx_inv 
+						// 			-> data[ index1 ][ index2 ][ dir ][ var ] 		= rx_inv( i1, i2, i3, numOfDimensions * dir + var );
+					}
+				}
+
 			}
 			// printf( "\n" );
 		}

@@ -47,7 +47,7 @@
             "program": "/home/overture/overture-hyde-shim/build/gridShim",
             "args": 
             [
-                "/home/overture/overture-hyde-shim/overtureGrids/sqrInSqr.hdf", 
+                "/home/overture/overture-hyde-shim/overtureGrids/transitiveWaveOLCurv0.hdf", 
                 "debugTestHDF.hdf"
             ],
             "stopAtEntry": false,

@@ -4,6 +4,7 @@
 // Forward declaration
 template <class T> class Array2D;
 template <class T> class Array3D;
+template <class T> class Array4D;
 
 
 class HydeGridData
@@ -47,7 +48,8 @@ class HydeGridData
 		// Array4D< double >    	*matrixMap          	= new Array4D< double >();
 		// Array4D< double >    	*matrixMapInv          	= new Array4D< double >();
 
-		Array2D< double >    	*matrixMap;
+		Array4D< double >    	*rx;
+		Array4D< double >    	*rx_inv;
 		Array2D< double >    	*matrixMapInv;
 
 		Array3D< double >    	*xy; // arrayData.p1

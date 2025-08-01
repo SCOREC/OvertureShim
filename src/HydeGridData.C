@@ -4,6 +4,7 @@
 #include "HydeGridData.h"
 #include "Array2D.h"
 #include "Array3D.h"
+#include "Array4D.h"
 
 
 
@@ -21,13 +22,15 @@ HydeGridData::HydeGridData( int _gridNumber )
     ///////////////////////////////////////////////////////////////////////////
     // Initialize matrixMap and matrixMapInv. /////////////////////////////////
     // All maps are identity for single grid.
-    matrixMap          		= new Array2D< double >();
+    // matrixMap          		= new Array2D< double >();
+    rx          			= new Array4D< double >();
+    rx_inv          		= new Array4D< double >();
     matrixMapInv          	= new Array2D< double >();
 
-    matrixMap       -> allocate( 4, 4 );
+    // matrixMap       -> allocate( 4, 4 );
     matrixMapInv    -> allocate( 4, 4 );
 
-    matrixMap       -> setIdentity();
+    // matrixMap       -> setIdentity();
     matrixMapInv    -> setIdentity();
     ///////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
