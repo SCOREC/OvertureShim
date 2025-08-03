@@ -14,7 +14,7 @@ class HydeGridData
 		std::string 			gridName;
 		std::string 			gridType;
 		// GridType                gridType                = GridType::Cartesian;
-		
+
 		int       				gridNumber;
 		int       				dim;
 
@@ -36,6 +36,7 @@ class HydeGridData
 
 		// All grid disc sizes can be derived from spacing.
 		double    				gridSpacing[ 3 ];
+		double    				dx[ 3 ];
 
 		int     				boundaryCondition[ 2 ][ 3 ];
 		// BCConditionType       	bcsAtGrid[ 2 ][ 3 ];
@@ -43,8 +44,9 @@ class HydeGridData
 
 		HydeGridData( int _gridNumber );
 
-		void 		setInteriorBox();
 		void 		setGridType();
+		void 		setInteriorBox();
+		void 		setDx();
 
 
 		// Define a Kokkos View to store arrayMask used points data

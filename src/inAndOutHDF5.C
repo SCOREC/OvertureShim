@@ -198,6 +198,25 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			////////////////////////////////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////////////////////////////////
 
+			if ( hydeGridData -> gridType == "Cartesian" )
+			{
+				////////////////////////////////////////////////////////////////////////////////////////
+				// Set dx ////////////////////////////////////////////////////////////////////////////
+				DataSpace   		dxSpace( 1, gridSpacingIntSize );
+
+				dataset 														= new 	DataSet( 
+																									group.createDataSet(  	"dx", 
+																															PredType::NATIVE_DOUBLE, 
+																															dxSpace ) 
+																								);
+				dataset ->      write(  &( hydeGridData -> dx ), 
+										PredType::NATIVE_DOUBLE );
+
+				delete 				dataset;
+				////////////////////////////////////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////////////////////////////////////
+			}
+
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set interior box /////////////////////////////////////////////////////////////////
 			hsize_t     	boxsize[] 					= {2, 3};
@@ -781,8 +800,6 @@ int getFromHDF5(    const char     			*fileName,
             hydeGridData -> NP[ j ]                 = hydeGridData -> N[ j ]      +   ghostPtsCounter;
 		}
 
-		hydeGridData -> setGridType();
-
 
 		
 		// Print grid_index_range for verification
@@ -938,12 +955,15 @@ int getFromHDF5(    const char     			*fileName,
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
+		hydeGridData -> setGridType();
+
 		// If grid is Cartesian, and interior can be specified from grid spacing.
 		if ( hydeGridData -> gridType == "Cartesian" )
 		{
 			hydeGridData -> setInteriorBox();
+			hydeGridData -> setDx();
 		}
-		
+
 
 		hydeCompositeGrid 
 				-> hydeGridData[ gridIndex ] 			= hydeGridData;

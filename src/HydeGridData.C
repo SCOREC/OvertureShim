@@ -38,6 +38,31 @@ HydeGridData::HydeGridData( int _gridNumber )
 }
 
 
+void HydeGridData::setGridType()
+{
+	this -> gridType 			= "Cartesian"; // Default grid type
+
+	for ( int i = 0; i < ( this -> rx -> rows ); i++ )
+	{
+		for ( int j = 0; j < ( this -> rx -> cols ); j++ )
+		{
+			for ( int d = 0; d < this -> dim; d++ )
+			{
+				for ( int d2 = d + 1; d2 < this -> dim; d2++ )
+				{
+					if ( this -> rx -> data[ i ][ j ][ d ][ d2 ] != 0.0 || 
+						 this -> rx -> data[ i ][ j ][ d2 ][ d ] != 0.0 )
+					{
+						this -> gridType 		= "Curvilinear";
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+
 void HydeGridData::setInteriorBox()
 {
 	int startIndex, endIndex;
@@ -54,18 +79,12 @@ void HydeGridData::setInteriorBox()
 }
 
 
-void HydeGridData::setGridType()
+void HydeGridData::setDx()
 {
-	this -> gridType 			= "Cartesian"; // Default grid type
-
-	for ( int i = 0; i < ( this -> jacobDet -> rows ); i++ )
+	for ( int i = 0; i < this -> dim; i++ )
 	{
-		for ( int j = 0; j < ( this -> jacobDet -> cols ); j++ )
-		{
-			if ( this -> jacobDet -> data[ i ][ j ] != 1.0 )
-			{
-				this -> gridType 		= "Curvilinear";
-			}
-		}
+		this -> dx[ i ] 		= (  this -> interiorBox[ 1 ][ i ] 
+                                                        -   this -> interiorBox[ 0 ][ i ] ) 
+                                                        * ( this -> gridSpacing[ i ] );
 	}
 }
