@@ -38,6 +38,7 @@ HydeGridData::HydeGridData( int _gridNumber )
 }
 
 
+// It is preferable if this information can be found within Overture.
 void HydeGridData::setGridType()
 {
 	this -> gridType 			= "Cartesian"; // Default grid type
@@ -63,6 +64,7 @@ void HydeGridData::setGridType()
 }
 
 
+// It is preferable if this information can be found within Overture.
 void HydeGridData::setInteriorBox()
 {
 	int startIndex, endIndex;
