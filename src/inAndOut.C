@@ -2,15 +2,18 @@
 #include <fstream>
 #include "inAndOut.h"
 
+#include "Array3D_V2.h"
+#include "Array4D.h"
+
 
 int sendToTextFile(   	const char*         fileName,
 						int                 numOfComponentGrids, 
 						int                 dimension, 
-						Array3D<int>        *grid_index_range, 
-                      	Array3D<int>        *ext_index_range,
-                  		Array3D<int>    	*bcs, 
+						Array3D_V2<int>        *grid_index_range, 
+                      	Array3D_V2<int>        *ext_index_range,
+                  		Array3D_V2<int>    	*bcs, 
                       	Array4D<double>     *xy,  
-                      	Array3D<int>        *mask )
+                      	Array3D_V2<int>        *mask )
 {
   std::ofstream   outputFile;
 
@@ -89,11 +92,11 @@ int sendToTextFile(   	const char*         fileName,
 int getFromTextFile(  const char*         fileName,
                       int                 *numOfComponentGrids, 
                       int                 *dimension, 
-                      Array3D<int>        *grid_index_range, 
-                      Array3D<int>        *ext_index_range,
-                      Array3D<int>        *bcs, 
+                      Array3D_V2<int>        *grid_index_range, 
+                      Array3D_V2<int>        *ext_index_range,
+                      Array3D_V2<int>        *bcs, 
                       Array4D<double>     *xy, 
-                      Array3D<int>        *mask )
+                      Array3D_V2<int>        *mask )
 {
   std::ifstream inFile;
 
@@ -170,7 +173,7 @@ int getFromTextFile(  const char*         fileName,
     {
       for( int j = 0; j < ny + 1; j++ )
       {
-        inFile >> mask -> data[ gridIndex ][ i ][ j ];
+        mask -> data[ gridIndex ][ i ][ j ];
       }
     }
     //////////////////////////////////////////////////////////////////////////////////

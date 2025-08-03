@@ -12,6 +12,9 @@ class HydeGridData
 	public:
 
 		std::string 			gridName;
+		std::string 			gridType;
+		// GridType                gridType                = GridType::Cartesian;
+		
 		int       				gridNumber;
 		int       				dim;
 
@@ -37,10 +40,12 @@ class HydeGridData
 		int     				boundaryCondition[ 2 ][ 3 ];
 		// BCConditionType       	bcsAtGrid[ 2 ][ 3 ];
 
-		// GridType                gridType                = GridType::Cartesian;
 
 		HydeGridData( int _gridNumber );
-		
+
+		void 		setInteriorBox();
+		void 		setGridType();
+
 
 		// Define a Kokkos View to store arrayMask used points data
 		Array2D< int >    		*arrayMask; // arrayData.p0
@@ -50,7 +55,9 @@ class HydeGridData
 
 		Array4D< double >    	*rx;
 		Array4D< double >    	*rx_inv;
-		Array2D< double >    	*matrixMapInv;
+		// Array2D< double >    	*matrixMapInv;
+
+		Array2D< double > 		*jacobDet;
 
 		Array3D< double >    	*xy; // arrayData.p1
 };

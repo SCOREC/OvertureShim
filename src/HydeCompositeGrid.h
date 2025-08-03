@@ -25,3 +25,4 @@ class HydeCompositeGrid
 							int 			_numOfDimensions );
 
 };
+

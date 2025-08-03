@@ -4,25 +4,26 @@
 // Forward declaration
 // class SigInterpPtsData;
 template <class T> class Array2D;
-// template <class T> class Array1D;
+template <class T> class Array1D;
 
 
 class HydeInterpData
 {
 	public:
 
-		int                                   gridNumber;
+		int                                   	gridNumber;
+		int 									numOfInterpPts;
 
 		// Collected after above
-		bool                                  gridHasHydeInterpData                   = false;
+		bool                                  	gridHasHydeInterpData                   = false;
 
-		Array2D< double >                     *allInterpPtsCoords;
-		Array2D< int >                        *allInterpPtsIndices;
+		Array2D< double >                     	*allInterpPtsCoords;
+		Array2D< int >                        	*allInterpPtsIndices;
 
-		Array2D< int >                        *allSigPtsIndices;
+		Array2D< int >                        	*allSigPtsIndices;
 
-		Array2D< int >                        *interpWidth;
-		Array2D< int >                        *stencilSizes;
+		Array1D< int >                        	*interpWidth;
+		Array2D< int >                        	*stencilSizes;
 
 		// This is the corresponding grid number for each significant point,
 		// ordered by address placement for the incoming grid indices.
@@ -30,7 +31,7 @@ class HydeInterpData
 		// pass this around everywhere.
 		// Array1D< int >                        *gridsSharingOL;
 
-		// Array1D< int >                        *sigGridNumbers;
+		Array1D< int >                        	*sigGridNumbers;
 
 
 		// SigInterpPtsData                      **sigInterpPtsData;

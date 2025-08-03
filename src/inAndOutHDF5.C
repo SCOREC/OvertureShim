@@ -13,6 +13,7 @@
 #include "H5Cpp.h"
 
 
+#include "Array1D.h"
 #include "Array2D.h"
 #include "Array3D.h"
 #include "Array4D.h"
@@ -133,6 +134,22 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			////////////////////////////////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////////////////////////////////
 		
+			////////////////////////////////////////////////////////////////////////////////////////
+			// Set grid type ///////////////////////////////////////////////////////////////////
+			hsize_t     		gridTypeStrSize[] = { hydeGridData->gridType.size() };
+			DataSpace   		gridTypeSpace( 1, gridTypeStrSize );
+
+			dataset 														= new 	DataSet(
+																								group.createDataSet("gridType",
+																													PredType::C_S1,
+																													gridTypeSpace)
+																							);
+
+			dataset->write(hydeGridData->gridType.c_str(), PredType::C_S1);
+
+			delete dataset;
+			////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////
 
 			////////////////////////////////////////////////////////////////////////////////////////
 			// Set useGhostPts ///////////////////////////////////////////////////////////////////
@@ -200,7 +217,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 
 			/////////////////////////////////////////////////////////////////////////////////////
-			// Set interior box /////////////////////////////////////////////////////////////////
+			// Set bounding box /////////////////////////////////////////////////////////////////
 			dataset 									= new 	DataSet( 
 																			group.createDataSet(  	"boundingBox", 
 																									PredType::NATIVE_DOUBLE, 
@@ -212,6 +229,24 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			delete 			dataset;
 			/////////////////////////////////////////////////////////////////////////////////////
 			/////////////////////////////////////////////////////////////////////////////////////
+
+			if ( hydeGridData -> gridType == "Cartesian" )
+			{
+				/////////////////////////////////////////////////////////////////////////////////////
+				// Set interior box /////////////////////////////////////////////////////////////////
+				dataset 									= new 	DataSet( 
+																				group.createDataSet(  	"interiorBox", 
+																										PredType::NATIVE_DOUBLE, 
+																										boxspace ) 
+																			);
+				dataset ->      write(  &( hydeGridData -> interiorBox ), 
+										PredType::NATIVE_DOUBLE );
+
+				delete 			dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
+
+			}
 
 
 			/////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +338,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 															static_cast<hsize_t> ( maskDim2 ), 
 															static_cast<hsize_t> ( numOfDimensions ) };
 
-			DataSpace 		xyspace(  	numOfDimensions + 1, 
+			DataSpace 		xyspace(  	3, 
 										gridsize1 );
 			
 			dataset 									= new 	DataSet( 
@@ -336,16 +371,46 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			delete 			dataset;
 			/////////////////////////////////////////////////////////////////////////////////////
 			/////////////////////////////////////////////////////////////////////////////////////
+		
+			////////////////////////////////////////////////////////////////////////////////////////
+			// Set jacobDet ////////////////////////////////////////////////////////////////////////
+			hsize_t     	interpJacobDetSize[] 						= { static_cast<hsize_t>( hydeGridData -> jacobDet -> rows ),
+																			static_cast<hsize_t>( hydeGridData -> jacobDet -> cols ) };
+			DataSpace   		interpNumPtsSpace( 2, interpJacobDetSize );
+			dataset 														= new 	DataSet( 
+																								group.createDataSet(  	"jacobDet", 
+																														PredType::NATIVE_DOUBLE, 
+																														interpNumPtsSpace ) 
+																							);
+
+			// Not sure why this is needed for now...
+			double 			jacobDet_placeholder[ hydeGridData -> jacobDet -> rows ][ hydeGridData -> jacobDet -> cols ];
+			
+			for( int i = 0; i < ( hydeGridData -> jacobDet -> rows ); i++ )
+			{
+				for ( int j = 0; j < ( hydeGridData -> jacobDet -> cols ); j++ )
+				{
+					jacobDet_placeholder[ i ][ j ] 		= hydeGridData 
+																-> jacobDet 
+																	-> data[ i ][ j ];
+				}
+			}
+			dataset ->      write(  &jacobDet_placeholder, 
+									PredType::NATIVE_DOUBLE );
+
+			delete 				dataset;
+			////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////
 
 
 			/////////////////////////////////////////////////////////////////////////////////////
-			// Set xy ///////////////////////////////////////////////////////////////////////////
+			// Set rx ///////////////////////////////////////////////////////////////////////////
 			hsize_t   		gridsize3[] 				= { static_cast<hsize_t> ( maskDim1 ), 
 															static_cast<hsize_t> ( maskDim2 ), 
 															static_cast<hsize_t> ( numOfDimensions), 
 															static_cast<hsize_t> ( numOfDimensions ) };
 
-			DataSpace 		rxSpace(  	numOfDimensions + 1, 
+			DataSpace 		rxSpace(  	4, 
 										gridsize3 );
 			
 			dataset 									= new 	DataSet( 
@@ -380,6 +445,188 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			delete 			dataset;
 			/////////////////////////////////////////////////////////////////////////////////////
 			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set rx_inv ///////////////////////////////////////////////////////////////////////////
+			
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"rx_inv", 
+																									PredType::NATIVE_DOUBLE, 
+																									rxSpace ) 
+																		);
+
+			// Not sure why this is needed for now...
+			double 		rxInv_Placeholder[ maskDim1 ][ maskDim2 ][ numOfDimensions ][ numOfDimensions ];
+
+			for( int i = 0; i < ( maskDim1 ); i++ )
+			{
+				for( int j = 0; j < ( maskDim2 ); j++ )
+				{
+					for( int k = 0; k < numOfDimensions; k++ )
+					{
+						for( int l = 0; l < numOfDimensions; l++ )
+						{
+							rxInv_Placeholder[ i ][ j ][ k ][ l ] 		= hydeGridData 
+																			-> rx_inv
+																				-> data[ i ][ j ][ k ][ l ];
+						}
+					}
+				}
+			}
+
+
+			dataset ->      write(  &rxInv_Placeholder, 
+									PredType::NATIVE_DOUBLE );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			HydeInterpData 	*hydeInterpData 				= hydeCompositeGrid -> hydeInterpData[ gridIndex ];
+
+			// Create a grid group in the file.
+			Group 			group2( compGridGroup.createGroup( "interpData" + std::to_string( gridIndex ) ) );
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set grid number ///////////////////////////////////////////////////////////////////
+			hsize_t     	interpGridNumIntSize[] 						= {1};
+			DataSpace   		interpGridNumSpace( 1, interpGridNumIntSize );
+			dataset 														= new 	DataSet( 
+																								group2.createDataSet(  	"numOfInterpPts", 
+																														PredType::NATIVE_INT, 
+																														interpGridNumSpace ) 
+																							);
+			dataset ->      write(  &( hydeInterpData -> numOfInterpPts ), 
+									PredType::NATIVE_INT );
+			delete 				dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			hsize_t   		numInterpPtsIntSize[] 			= { static_cast<hsize_t>( hydeInterpData -> allInterpPtsIndices -> rows ),
+																static_cast<hsize_t>( hydeInterpData -> allInterpPtsIndices -> cols ) };
+			DataSpace 		numInterpPtsSpace( 	2, 
+												numInterpPtsIntSize );
+			
+			dataset 									= new 	DataSet( 
+																			group2.createDataSet(  	"interpPtsIndices", 
+																									PredType::NATIVE_INT, 
+																									numInterpPtsSpace ) 
+																		);
+
+			// Not sure why this is needed for now...
+			int 			interpPtsIndices_Placeholder[ hydeInterpData -> allInterpPtsIndices -> rows ][ hydeInterpData -> allInterpPtsIndices -> cols ];
+			for( int i = 0; i < ( hydeInterpData -> allInterpPtsIndices -> rows ); i++ )
+			{
+				for( int j = 0; j < ( hydeInterpData -> allInterpPtsIndices -> cols ); j++ )
+				{
+					interpPtsIndices_Placeholder[ i ][ j ] 		= hydeInterpData 
+																		-> allInterpPtsIndices 
+																			-> data[ i ][ j ];
+				}
+			}
+
+			dataset ->      write(  &interpPtsIndices_Placeholder, 
+									PredType::NATIVE_INT );
+
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+			dataset 									= new 	DataSet( 
+																			group2.createDataSet(  	"interpPtsCoords", 
+																									PredType::NATIVE_DOUBLE, 
+																									numInterpPtsSpace ) 
+																		);
+
+			// Not sure why this is needed for now...
+			double 		interpPtsCoords_Placeholder[ hydeInterpData -> allInterpPtsCoords -> rows ][ hydeInterpData -> allInterpPtsCoords -> cols ];
+			for( int i = 0; i < ( hydeInterpData -> allInterpPtsCoords -> rows ); i++ )
+			{
+				for( int j = 0; j < ( hydeInterpData -> allInterpPtsCoords -> cols ); j++ )
+				{
+					interpPtsCoords_Placeholder[ i ][ j ] 		= hydeInterpData 
+																		-> allInterpPtsCoords 
+																			-> data[ i ][ j ];
+				}
+			}
+
+			dataset ->      write(  &interpPtsCoords_Placeholder, 
+									PredType::NATIVE_DOUBLE );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+			dataset 									= new 	DataSet( 
+																			group2.createDataSet(  	"sigPtsIndices", 
+																									PredType::NATIVE_INT, 
+																									numInterpPtsSpace ) 
+																		);
+			// Not sure why this is needed for now...
+			int 			sigInterpGrid_Placeholder[ hydeInterpData -> allSigPtsIndices -> rows ][ hydeInterpData -> allSigPtsIndices -> cols ];
+			for( int i = 0; i < ( hydeInterpData -> allSigPtsIndices -> rows ); i++ )
+			{
+				for ( int j = 0; j < ( hydeInterpData -> allSigPtsIndices -> cols ); j++ )
+				{
+					sigInterpGrid_Placeholder[ i ][ j ] 		= hydeInterpData 
+																	-> allSigPtsIndices 
+																		-> data[ i ][ j ];
+				}
+			}
+
+			dataset ->      write(  &sigInterpGrid_Placeholder, 
+									PredType::NATIVE_INT );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			hsize_t   		numInterpPtsIntSize2[] 			= { static_cast<hsize_t>( hydeInterpData -> sigGridNumbers -> size ) };
+			DataSpace 		numInterpPtsSpace2( 1, 
+												numInterpPtsIntSize2 );
+
+			dataset 									= new 	DataSet( 
+																			group2.createDataSet(  	"interpWidth", 
+																									PredType::NATIVE_INT, 
+																									numInterpPtsSpace2 ) 
+																		);
+			// Not sure why this is needed for now...
+			int 			interpWidth_Placeholder[ hydeInterpData -> interpWidth -> size ];
+			for( int i = 0; i < ( hydeInterpData -> interpWidth -> size ); i++ )
+			{
+				interpWidth_Placeholder[ i ] 		= hydeInterpData 
+														-> interpWidth 
+															-> data[ i ];
+			}
+
+			dataset ->      write(  &interpWidth_Placeholder, 
+									PredType::NATIVE_INT );
+
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
+
+
+			dataset 									= new 	DataSet( 
+																			group2.createDataSet(  	"sigGridNumbers", 
+																									PredType::NATIVE_INT, 
+																									numInterpPtsSpace2 ) 
+																		);
+			// Not sure why this is needed for now...
+			int 			sigGridNumbers_Placeholder[ hydeInterpData -> sigGridNumbers -> size ];
+			for( int i = 0; i < ( hydeInterpData -> sigGridNumbers -> size ); i++ )
+			{
+				sigGridNumbers_Placeholder[ i ] 			= hydeInterpData 
+																-> sigGridNumbers 
+																	-> data[ i ];  // Assuming sigGridNumbers is 1D
+			}
+
+			dataset ->      write(  &sigGridNumbers_Placeholder, 
+									PredType::NATIVE_INT );
+			delete 			dataset;
 		}
 
 
@@ -438,12 +685,14 @@ int getFromHDF5(    const char     			*fileName,
 
 	// Instantiate numOfGrids GridData objects for this CompositeGrid
 	hydeCompositeGrid 
-		-> hydeGridData            		= new HydeGridData*  [ numOfGrids ];						
+		-> hydeGridData            		= new HydeGridData*  [ numOfGrids ];		
+	hydeCompositeGrid 
+		-> hydeInterpData            	= new HydeInterpData*[ numOfGrids ];				
 
 
 	
 	// Get number of interp pts from CompositeGrid
-	const IntegerArray 		&ni 		= compositeGrid.numberOfInterpolationPoints;
+	const IntegerArray 		&numInterpPts 		= compositeGrid.numberOfInterpolationPoints;
 	
 	for ( int gridIndex = 0; gridIndex < numOfGrids; gridIndex++ )
 	{
@@ -455,8 +704,11 @@ int getFromHDF5(    const char     			*fileName,
 		MappedGrid 				&grid 					= compositeGrid[ gridIndex ];
 		grid.update( 	MappedGrid::THEvertex 
 					| 	MappedGrid::THEmask 
-					| 	MappedGrid::THEinverseVertexDerivative 
+					| 	MappedGrid::THEinverseVertexDerivative
+					| 	MappedGrid::THEvertexDerivative
 					| 	MappedGrid::THEvertexJacobian );  // create the vertex and mask arrays
+
+		// const GenericGrid::GridTypeEnum   &gridType 	= grid.getGridType();
 
 		const IntegerArray 		&gridDimensions 		= grid.dimension();          // grid array dimensions
 		const IntegerArray 		&gridIndexRange 		= grid.gridIndexRange();
@@ -464,8 +716,8 @@ int getFromHDF5(    const char     			*fileName,
 		const IntegerArray 		&bc             		= grid.boundaryCondition();  // unused for now
 
 		const RealArray 		&det 					= grid.vertexJacobian(  ); // get the vertex jacobian determinant
-		const RealArray 		&rx 					= grid.inverseVertexDerivative();
-		const RealArray 		&rx_inv 				= grid.vertexDerivative();
+		const RealArray 		&rx 					= grid.vertexDerivative();
+		const RealArray 		&rx_inv 				= grid.inverseVertexDerivative();
 
     	const IntegerArray 		&numOfGhosts 			= grid.numberOfGhostPoints();
     	const Logical 			&useGhostPoints 		= grid.useGhostPoints();
@@ -528,6 +780,10 @@ int getFromHDF5(    const char     			*fileName,
 
             hydeGridData -> NP[ j ]                 = hydeGridData -> N[ j ]      +   ghostPtsCounter;
 		}
+
+		hydeGridData -> setGridType();
+
+
 		
 		// Print grid_index_range for verification
 		std::cout 	<< hydeGridData -> extGridIndexRange[ 0 ][ 0 ] << " " 
@@ -588,13 +844,19 @@ int getFromHDF5(    const char     			*fileName,
 		hydeGridData
 				-> rx -> setIdentity();  // initialize to zero
 
-		// hydeGridData 
-		// 		-> rx_inv	
-		// 			-> allocate( 	gridSize1, 
-		// 							gridSize2, 
-		// 							numOfDimensions );
-		// hydeGridData
-		// 		-> rx_inv -> setIdentity();  // initialize to zero
+		hydeGridData 
+				-> rx_inv	
+					-> allocate( 	gridSize1, 
+									gridSize2, 
+									numOfDimensions );
+		hydeGridData
+				-> rx_inv -> setIdentity();  // initialize to zero
+
+		hydeGridData 
+				-> jacobDet -> allocate( gridSize1, gridSize2 );
+
+		hydeGridData 
+				-> jacobDet -> fill( 1.0 );  // initialize to 1s
 		
 
 		if(  ok  )  // if there are points on this processor
@@ -659,25 +921,168 @@ int getFromHDF5(    const char     			*fileName,
 						hydeGridData 
 								-> rx 
 									-> data[ index1 ][ index2 ][ dir ][ var ] 		= RXI( i1, i2, i3, var , dir);
-						// hydeGridData 
-						// 		-> rx_inv 
-						// 			-> data[ index1 ][ index2 ][ dir ][ var ] 		= rx_inv( i1, i2, i3, numOfDimensions * dir + var );
+						hydeGridData 
+								-> rx_inv 
+									-> data[ index1 ][ index2 ][ dir ][ var ] 		= rx_inv( i1, i2, i3, numOfDimensions * dir + var );
 					}
 				}
 
+				hydeGridData 
+						-> jacobDet 
+							-> data[ index1 ][ index2 ]  		= det( i1, i2, i3 );
+
 			}
 			// printf( "\n" );
+
 		}
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		// If grid is Cartesian, and interior can be specified from grid spacing.
+		if ( hydeGridData -> gridType == "Cartesian" )
+		{
+			hydeGridData -> setInteriorBox();
+		}
 		
 
 		hydeCompositeGrid 
 				-> hydeGridData[ gridIndex ] 			= hydeGridData;
 
 
+
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Collect all interp grid data for this grid /////////////////////////////////////////////////////////
+
+		HydeInterpData 			*hydeInterpData 			= new HydeInterpData( gridIndex );
+
+		if(  numInterpPts( gridIndex ) > 0  )
+		{
+			intSerialArray    sigInterpGrid, interpWidth, interpPtsIndices, sigPtsIndices;
+			realSerialArray   interpPtsCoords;
+
+			// const IntegerArray &interpWidth2 = compositeGrid.interpolationWidth[ gridIndex ];
+
+			if(  compositeGrid->localInterpolationDataState == CompositeGridData::noLocalInterpolationData  )
+			{
+				printF( "Found interpolationPoint\n" );
+			
+				// If the grid was written in serial,  the interpolation arrays are saved here:
+				interpPtsIndices.reference 	( compositeGrid.interpolationPoint[ gridIndex ].getLocalArray(  ) );
+				sigPtsIndices.reference 	( compositeGrid.interpoleeLocation[ gridIndex ].getLocalArray(  ) );
+				sigInterpGrid.reference 	( compositeGrid.interpoleeGrid[ gridIndex ].getLocalArray(  ) );
+				interpWidth.reference		( compositeGrid.variableInterpolationWidth[ gridIndex ].getLocalArray(  ) );
+				// interpWidth2.reference		( compositeGrid.interpolationWidth[ gridIndex ].getLocalArray(  ) );
+				interpPtsCoords.reference 	( compositeGrid.interpolationCoordinates[ gridIndex ].getLocalArray(  ) );
+			}
+			else
+			{
+				// If the grid was written in parallel,  the interpolation arrays are saved as separate serial arrays:
+				printF( "Found interpolationPointLocal\n" );
+
+				interpPtsIndices.reference 	( compositeGrid->interpolationPointLocal[ gridIndex ] );
+				sigPtsIndices.reference 	( compositeGrid->interpoleeLocationLocal[ gridIndex ] );
+				sigInterpGrid.reference 	( compositeGrid->interpoleeGridLocal[ gridIndex ] );
+				interpWidth.reference		( compositeGrid->variableInterpolationWidthLocal[ gridIndex ] );
+				interpPtsCoords.reference 	( compositeGrid->interpolationCoordinatesLocal[ gridIndex ] );
+			}
+			
+			if(  false  )
+			{ 
+				// show how to copy the interpolation point data to one processor
+				Index Iv[2];
+				Iv[0] = interpPtsIndices.dimension( 0 );
+				Iv[1] = interpPtsIndices.dimension( 1 );
+
+				// create an aggregate array on proc. 0 holding all ip values
+				int p0 = 0;   
+				IntegerArray ip0;
+				CopyArray::getAggregateArray(  interpPtsIndices,  Iv,  ip0, p0 );
+				// fprintf( file, "%i ( number of interpolation points in the aggregate array )\n", ip0.getLength( 0 ) );
+
+				// for(  int i = ip0.getBase( 0 ); i <= ip0.getBound( 0 ); i++  )
+				// {
+				// 	fprintf( file, "%i %i %i  ( interpPtsIndices )\n", 
+				// 				ip0( i, 0 ), ip0( i, 1 ), ( numberOfDimensions == 2 ? 0 : ip0( i, 2 ) ) 
+				// 			);
+				// }
+
+			}
+
+			// sigInterpGrid : donor grid 
+			// interpWidth : interpolation width 
+			// interpPtsIndices : interpolation point ( on grid )
+			// sigPtsIndices : lower left corner of donor stencil ( on the donor grid )
+			// interpPtsCoords : unit square coordinates of the interpolation point in the donor grid
+
+			int 	numInterpPtsLocal 		= interpPtsIndices.getLength( 0 );  // number of interpolation points on this processor
+
+			hydeInterpData
+				-> numOfInterpPts 
+											= numInterpPtsLocal;
+
+
+			hydeInterpData 
+				-> allInterpPtsIndices 
+					-> allocate( numInterpPtsLocal, numOfDimensions ); 
+			hydeInterpData 
+				-> allSigPtsIndices 
+					-> allocate( numInterpPtsLocal, numOfDimensions ); 
+			hydeInterpData 
+				-> allInterpPtsCoords 
+					-> allocate( numInterpPtsLocal, numOfDimensions );
+			hydeInterpData 
+				-> sigGridNumbers 
+					-> allocate( numInterpPtsLocal );
+			hydeInterpData 
+				-> interpWidth 
+					-> allocate( numInterpPtsLocal );
+
+			for(  int i = interpPtsIndices.getBase( 0 ); i <= interpPtsIndices.getBound( 0 ); i++  )
+			{
+				for ( int d = 0; d < numOfDimensions; d++ )
+				{
+					// interpPtsIndices is 2D or 3D
+					hydeInterpData 
+						-> allInterpPtsIndices
+							-> data[ i ][ d ] 		= interpPtsIndices( i, d );
+					// sigPtsIndices is 2D or 3D
+					hydeInterpData 
+						-> allSigPtsIndices
+							-> data[ i ][ d ] 		= sigPtsIndices( i, d );
+					// interpPtsCoords is 2D or 3D
+					hydeInterpData 
+						-> allInterpPtsCoords
+							-> data[ i ][ d ] 		= interpPtsCoords( i, d );
+					// sigInterpGrid is 1D
+					hydeInterpData 
+						-> sigGridNumbers
+							-> data[ i ] 			= sigInterpGrid( i );
+					// interpWidth is 1D
+					hydeInterpData 
+						-> interpWidth
+							-> data[ i ] 			= interpWidth( i );
+				}
+				
+				// fprintf(  file, "%i,  %i,  (%i,  %i,  %i),   (%i,  %i,  %i),   (%i,  %i,  %i),  (%e,  %e,  %e) ( donor,  width,  interpPtsIndices,  sigPtsIndices,  interpPtsCoords )\n", 
+				// 			sigInterpGrid( i )   ,    interpWidth( i ), 
+				// 			interpPtsIndices( i, 0 ),  interpPtsIndices( i, 1 ),  ( numberOfDimensions==2 ? 0 : interpPtsIndices( i, 2 ) ), 
+				// 			sigPtsIndices( i, 0 ),  sigPtsIndices( i, 1 ),  ( numberOfDimensions==2 ? 0 : sigPtsIndices( i, 2 ) ), 
+				// 			interpPtsCoords( i, 0 ),  interpPtsCoords( i, 1 ),  ( numberOfDimensions==2 ? 0.0 : interpPtsCoords( i, 2 ) ) 
+					// );
+			}
+
+		}
+
+		hydeCompositeGrid 
+				-> hydeInterpData[ gridIndex ] 			= hydeInterpData;
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		// destroy arrays to save space
-		grid.destroy( MappedGrid::THEvertex | MappedGrid::THEmask );  
+		grid.destroy( 	MappedGrid::THEvertex 
+					| 	MappedGrid::THEmask 
+					| 	MappedGrid::THEinverseVertexDerivative 
+					| 	MappedGrid::THEvertexJacobian );  
 	}
 
 	return 0;

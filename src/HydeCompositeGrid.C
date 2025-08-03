@@ -20,5 +20,3 @@ HydeCompositeGrid::HydeCompositeGrid( 	const char 		*_fileName,
 	this -> dimOfProblem               	= _numOfDimensions;
 }
 
-
-
