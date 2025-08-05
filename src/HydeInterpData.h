@@ -23,6 +23,7 @@ class HydeInterpData
 		Array2D< int >                        	*allSigPtsIndices;
 
 		Array1D< int >                        	*interpWidth;
+		int                                  	interpWidth2[ 2 ][ 3 ];
 		Array2D< int >                        	*stencilSizes;
 
 		// This is the corresponding grid number for each significant point,

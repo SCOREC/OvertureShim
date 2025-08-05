@@ -66,7 +66,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 		
 
 		// Create a group for the composite grid in the file.
-		Group 				compGridGroup( file->createGroup( "/compositeGrid") );
+		Group 				compGridGroup( file->createGroup( "/CompositeGrid") );
 
 		// Create dataspace for dataset in file.
 		DataSet   			*dataset;
@@ -133,10 +133,58 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			delete 				dataset;
 			////////////////////////////////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////////////////////////////////
+
+		////////////////////////////////////////////////////////////////////////////////////////
+		// Set N ///////////////////////////////////////////////////////////////////////////////
+		hsize_t     		gridDimSize[] 					= {3};
+		DataSpace   		gridDimSpace( 1, gridDimSize );
+
+		dataset 											= new 	DataSet( 
+																				group.createDataSet(  	"N", 
+																										PredType::NATIVE_INT, 
+																										gridDimSpace ) 
+																			);
+
+		dataset ->      write(  &( hydeGridData -> N ), 
+								PredType::NATIVE_INT );
+
+		delete 				dataset;
+		////////////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////////////
+
+		////////////////////////////////////////////////////////////////////////////////////////
+		// Set NP ///////////////////////////////////////////////////////////////////////////////
+		dataset 											= new 	DataSet( 
+																				group.createDataSet(  	"NP", 
+																										PredType::NATIVE_INT, 
+																										gridDimSpace ) 
+																			);
+
+		dataset ->      write(  &( hydeGridData -> NP ), 
+								PredType::NATIVE_INT );
+
+		delete 				dataset;
+		////////////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////////////
+
+		////////////////////////////////////////////////////////////////////////////////////////
+		// Set npoints ///////////////////////////////////////////////////////////////////////////////
+		dataset 											= new 	DataSet( 
+																				group.createDataSet(  	"numOfGridPts", 
+																										PredType::NATIVE_INT, 
+																										gridNumSpace ) 
+																			);
+
+		dataset ->      write(  &( hydeGridData -> npoints ), 
+								PredType::NATIVE_INT );
+
+		delete 				dataset;
+		////////////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////////////
 		
 			////////////////////////////////////////////////////////////////////////////////////////
 			// Set grid type ///////////////////////////////////////////////////////////////////
-			hsize_t     		gridTypeStrSize[] = { hydeGridData->gridType.size() };
+			hsize_t     		gridTypeStrSize[] 							= { hydeGridData -> gridType.size() };
 			DataSpace   		gridTypeSpace( 1, gridTypeStrSize );
 
 			dataset 														= new 	DataSet(
@@ -145,7 +193,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																													gridTypeSpace)
 																							);
 
-			dataset->write(hydeGridData->gridType.c_str(), PredType::C_S1);
+			dataset -> write( hydeGridData -> gridType.c_str(), PredType::C_S1 );
 
 			delete dataset;
 			////////////////////////////////////////////////////////////////////////////////////////
@@ -470,7 +518,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			// Set rx_inv ///////////////////////////////////////////////////////////////////////////
 			
 			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"rx_inv", 
+																			group.createDataSet(  	"rxInv", 
 																									PredType::NATIVE_DOUBLE, 
 																									rxSpace ) 
 																		);
@@ -712,6 +760,7 @@ int getFromHDF5(    const char     			*fileName,
 	
 	// Get number of interp pts from CompositeGrid
 	const IntegerArray 		&numInterpPts 		= compositeGrid.numberOfInterpolationPoints;
+	const IntegerArray 		&interpWidth2 		= compositeGrid.interpolationWidth;
 	
 	for ( int gridIndex = 0; gridIndex < numOfGrids; gridIndex++ )
 	{
@@ -798,6 +847,14 @@ int getFromHDF5(    const char     			*fileName,
                                                     	-   gridDimensions( 0, j )    )   +   1;
 
             hydeGridData -> NP[ j ]                 = hydeGridData -> N[ j ]      +   ghostPtsCounter;
+
+            // Check for overflow in npoints calculation
+            if ( hydeGridData -> npoints  >   ( INT_MAX / hydeGridData -> NP[ j ] ) ) 
+            {
+                throw std::overflow_error( "npoints multiplication would overflow int" );
+            }
+
+            hydeGridData -> npoints                 = ( hydeGridData -> npoints ) * ( hydeGridData -> NP[ j ] );
 		}
 
 
@@ -859,7 +916,7 @@ int getFromHDF5(    const char     			*fileName,
 									gridSize2, 
 									numOfDimensions );
 		hydeGridData
-				-> rx -> setIdentity();  // initialize to zero
+				-> rx -> setIdentity();  // initialize to I
 
 		hydeGridData 
 				-> rx_inv	
@@ -867,7 +924,7 @@ int getFromHDF5(    const char     			*fileName,
 									gridSize2, 
 									numOfDimensions );
 		hydeGridData
-				-> rx_inv -> setIdentity();  // initialize to zero
+				-> rx_inv -> setIdentity();  // initialize to I
 
 		hydeGridData 
 				-> jacobDet -> allocate( gridSize1, gridSize2 );
@@ -955,14 +1012,8 @@ int getFromHDF5(    const char     			*fileName,
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		hydeGridData -> setGridType();
-
-		// If grid is Cartesian, and interior can be specified from grid spacing.
-		if ( hydeGridData -> gridType == "Cartesian" )
-		{
-			hydeGridData -> setInteriorBox();
-			hydeGridData -> setDx();
-		}
+		// Process collected values to populate remaining grid data
+		hydeGridData -> processGridData();
 
 
 		hydeCompositeGrid 

@@ -69,11 +69,15 @@ void HydeGridData::setInteriorBox()
 {
 	int startIndex, endIndex;
 
-	startIndex 			= this -> numOfGhostPts[ 0 ][ 0 ];
-	endIndex 			= this -> xy -> dim1 - this -> numOfGhostPts[ 1 ][ 0 ] - 1;
+	startIndex 							= this -> numOfGhostPts[ 0 ][ 0 ];
+	endIndex 							= this -> xy -> dim1 - this -> numOfGhostPts[ 1 ][ 0 ] - 1;
 
 	this -> interiorBox[ 0 ][ 0 ] 		= this -> xy -> data[ startIndex ][ 0 ][ 0 ];
 	this -> interiorBox[ 1 ][ 0 ] 		= this -> xy -> data[ endIndex ][ 0 ][ 0 ];
+
+
+	startIndex 							= this -> numOfGhostPts[ 0 ][ 1 ];
+	endIndex 							= this -> xy -> dim1 - this -> numOfGhostPts[ 1 ][ 1 ] - 1;
 
 	this -> interiorBox[ 0 ][ 1 ] 		= this -> xy -> data[ 0 ][ startIndex ][ 1 ];
 	this -> interiorBox[ 1 ][ 1 ] 		= this -> xy -> data[ 0 ][ endIndex ][ 1 ];
@@ -85,8 +89,22 @@ void HydeGridData::setDx()
 {
 	for ( int i = 0; i < this -> dim; i++ )
 	{
-		this -> dx[ i ] 		= (  this -> interiorBox[ 1 ][ i ] 
-                                                        -   this -> interiorBox[ 0 ][ i ] ) 
-                                                        * ( this -> gridSpacing[ i ] );
+		this -> dx[ i ] 		= ( this -> interiorBox[ 1 ][ i ] 
+										-   this -> interiorBox[ 0 ][ i ] ) 
+											* ( this -> gridSpacing[ i ] );
 	}
+}
+
+
+void HydeGridData::processGridData()
+{
+	this -> setGridType();
+
+	// If grid is Cartesian, and interior can be specified from grid spacing.
+	if ( this -> gridType == "Cartesian" )
+	{
+		this -> setInteriorBox();
+		this -> setDx();
+	}
+	
 }

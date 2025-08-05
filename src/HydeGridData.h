@@ -47,6 +47,7 @@ class HydeGridData
 		void 		setGridType();
 		void 		setInteriorBox();
 		void 		setDx();
+		void 		processGridData();
 
 
 		// Define a Kokkos View to store arrayMask used points data
