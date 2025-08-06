@@ -812,15 +812,12 @@ int getFromHDF5(    const char     			*fileName,
 		// Set grid_index_range and ext_index_range /////////////////////////////////////////////////////////////////
 		hydeGridData
 			-> useGhostPts 							= useGhostPoints;
-		int 					ghostPtsCounter 	= 0;
 
 		for ( int j = 0; j < 3; j++ )
 		{
 			hydeGridData 
 				-> gridSpacing[ j ] 			= gridSpacing( j );
 			
-
-            ghostPtsCounter                     = 0;
 
 			for ( int i = 0; i < 2; i++ )
 			{
@@ -838,15 +835,14 @@ int getFromHDF5(    const char     			*fileName,
 
 				hydeGridData 
 					-> boundaryCondition[ i ][ j ]			= bc( i, j );
-
-                ghostPtsCounter                             += hydeGridData -> numOfGhostPts[ i ][ j ];
 			}
 
             // Set numbers of relevant grid pts data.
-            hydeGridData -> N[ j ]                  = (     gridDimensions( 1, j )
-                                                    	-   gridDimensions( 0, j )    )   +   1;
+            hydeGridData -> N[ j ]                  = (     gridIndexRange( 1, j )
+                                                    	-   gridIndexRange( 0, j )    )   +   1;
 
-            hydeGridData -> NP[ j ]                 = hydeGridData -> N[ j ]      +   ghostPtsCounter;
+            hydeGridData -> NP[ j ]                 = (     gridDimensions( 1, j )
+                                                    	-   gridDimensions( 0, j )    )   +   1;
 
             // Check for overflow in npoints calculation
             if ( hydeGridData -> npoints  >   ( INT_MAX / hydeGridData -> NP[ j ] ) ) 
