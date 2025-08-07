@@ -46,7 +46,7 @@ A+++ = $(APlusPlus)
 # AppLibraries = -L$(APlusPlus) -lA++ -lA++_static
 AppLibraries = $(OV_RPATH)$(APlusPlus)/lib -L$(APlusPlus)/lib -lApp -lApp_static 
 
-Include=  -I$(Overture)/include -I. -I$(HDF)/include -I$(HDF)/c++/src -I/home/overture/overture/include
+Include=  -I$(Overture)/include -I. -I$(HDF)/include -I$(HDF)/c++/src -I/$(OvertureBuild)/include
 Lib=      $(Overture)/lib
 LibOverture= -lOverture -lOverture_static -lOgmg
 # Make 2 dynamic libs for ibm: 
@@ -170,13 +170,13 @@ ARFLAGS = ruv
 #KCC ARFLAGS = -o 
 
 LD = $(CC)
-//LDFLAGS = -L -Wl,-rpath,/home/overture/hdf5-1.8.15-macPatch/lib -L/home/overture/hdf5-1.8.15-macPatch/lib -lhdf5_cpp -lhdf5 -ljpeg -lz
-LDFLAGS = -L/home/overture/overture/lib \
-          -Wl,-rpath,/home/overture/hdf5-1.8.15-macPatch/lib -L/home/overture/hdf5-1.8.15-macPatch/lib -lhdf5 -lhdf5_cpp -ljpeg -lz \
+//LDFLAGS = -L -Wl,-rpath,/$(HDF)/lib -L/$(HDF)/lib -lhdf5_cpp -lhdf5 -ljpeg -lz
+LDFLAGS = -L/$(OvertureBuild)/lib \
+          -Wl,-rpath,/$(HDF)/lib -L/$(HDF)/lib -lhdf5 -lhdf5_cpp -ljpeg -lz \
           -lgfortran -Wl,-rpath,/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -L/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -lperl -ldl -lm -lpthread -lc -lcrypt \
           -Wl,-rpath,/usr/opengl/lib64 -L/usr/opengl/lib64 -lGL -lGLU -lGLw -lOpenGL \
           -Wl,-rpath,/usr/motif/lib64 -L/usr/motif/lib64 -lXm -L/lib/x86_64-linux-gnu/lib64 -lXt -lXmu -lXi -lXext -lX11 \
-          -Wl,-rpath,/home/overture/dependencies/A++/install/lib -L/home/overture/dependencies/A++/install/lib -lApp -lApp_static \
+          -Wl,-rpath,/$(APlusPlus)/lib -L/$(APlusPlus)/lib -lApp -lApp_static \
           -Wl,-rpath,/lib/x86_64-linux-gnu/ -L/lib/x86_64-linux-gnu/
 
 LIBS = 
