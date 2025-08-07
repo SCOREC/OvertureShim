@@ -1,0 +1,247 @@
+# 
+# This Makefile was created by the configure script using
+# the files config/MakeDefs.darwin and primer/Makefile.in 
+# 
+# linux with dynamic libraries (requires ecgs compiler)
+
+# these next values for compilers will be used unless overridden with an argument to configure
+cc = gcc
+CC = g++
+FC = gfortran
+
+# On some 64-bit machines some libraries are in lib64 instead of lib
+# this next line will be changed by the configure script
+LIB64 = lib
+
+# Here is the rpath command
+
+MOTIF_LIB = $(MOTIF)/$(LIB64)
+OPENGL_LIB = $(OpenGL)/$(LIB64)
+
+XLIBS_LIB = $(XLIBS)/$(LIB64)
+# OV_X_LIBRARIES = -L$(XLIBS_LIB) -lXpm -lXp -lXt -lXmu -lXi -lXext -lX11
+# OV_X_LIBRARIES = -L$(XLIBS_LIB) -lXpm -lXp -lXt -lXmu -lXi -lXext -lX11 
+# New Mac does not need libXpm - Dec 7, 2019 
+# OV_X_LIBRARIES = -L$(XLIBS_LIB) -lXp -lXt -lXmu -lXi -lXext -lX11 
+# Newest Mac does not need -lXi 
+OV_X_LIBRARIES = -L$(XLIBS_LIB) -lXp -lXt -lXmu -lXext -lX11 
+# 
+# Daniel make this change for his Mac: 
+# OV_X_LIBRARIES = -L$(XLIBS_LIB) -lXpm -lXp -lXt -lXmu -lXi -lXext -lX11 -Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib
+
+LAPACK_LIBRARIES = -L$(LAPACK) -llapack -lblas
+
+# these next lines will be changed by the configure script
+USE_DOUBLE_OR_SINGLE = -DOV_USE_DOUBLE
+#xlc USE_DOUBLE_OR_SINGLE = -WF,-DOV_USE_DOUBLE
+
+A++ = $(APlusPlus)
+A+++ = $(APlusPlus)
+# AppLibraries = -L$(APlusPlus) -lA++ -lA++_static
+AppLibraries = -L$(APlusPlus)/lib -lApp -lApp_static 
+
+Include=  -I$(Overture)/include -I. -I$(HDF)/include -I$(HDF)/c++/src
+Lib=      $(Overture)/lib
+
+LibOverture= -lOverture -lOverture_static -lOgmg
+
+LibRapsodi= -lRapsodi -lRapsodi_static $(RLIBLIBS)
+BOXLIB_DEFS = -DBL_USE_DOUBLE -DBL_Solaris
+
+# Here is where we can find the perl include files and library (CORE)
+# These will normally be changed by the configure script unless it can't find the location of the perl CORE 
+OV_PERL_INCLUDE = /opt/homebrew/opt/perl/lib/perl5/5.40/darwin-thread-multi-2level/CORE
+OV_PERL_LIB = /opt/homebrew/opt/perl/lib/perl5/5.40/darwin-thread-multi-2level/CORE
+#kkc 060111 here is an attempt to automatically setup the perl stuff
+PERLSYSS := $(shell perl -V:archname)
+PERL_SYS := $(shell $(PERLSYSS) echo $${archname} )
+PERLDIRS := $(shell perl -V:prefix)
+PERL_DIR := $(shell $(PERLDIRS) echo $${prefix} )
+PERLVERS := $(shell perl -V:version)
+PERL_VER := $(shell $(PERLVERS) echo $${version} )
+OV_PERL_INCLUDE = /opt/homebrew/opt/perl/lib/perl5/5.40/darwin-thread-multi-2level/CORE
+OV_PERL_LIB = /opt/homebrew/opt/perl/lib/perl5/5.40/darwin-thread-multi-2level/CORE
+# Here are the perl libraries we need to link to
+OV_PERL_LIBRARIES = -L$(OV_PERL_LIB) -lperl 
+
+# these next flags are compiler dependent
+# *** WARNING *** these next lines are changed by the configure script
+# old: used -mlongcall for cc_FLAGS CC_FLAGS and FF_FLAGS
+cc_FLAGS = -fPIC
+#  HAS_MODFL_PROTO is for a perl compile error of OvertureParser.C for gcc 3.4.3
+CC_FLAGS = -fPIC -DHAS_MODFL_PROTO
+#xlc FF_FLAGS = -qpic -qextname -qfixed=128 -qcompact -qautodbl=dbl
+
+# *wdh* Dec 4, 2020 For latest gfortran add extra flag to avoid error in the Ncar fft routine s 
+FF_FLAGS = -fPIC -fallow-argument-mismatch
+
+
+# turn off warnings from intel f95 compiler
+#ifc FF_FLAGS = -fPIC -w
+
+# these next values will may be changed by the configure script
+C_OPTIMIZATION_FLAG = -g
+CPP_OPTIMIZATION_FLAG = -g
+FORTRAN_OPTIMIZATION_FLAG = -g
+
+CFLAGS =  $(cc_FLAGS)  $(Include)  $(C_OPTIMIZATION_FLAG) -I$(XLIBS) -DSHM
+# flags for c routines we always optimize
+CFLAGSO =  -O $(cc_FLAGS)  $(Include)  -I$(XLIBS) -DSHM
+
+# do not include some paths, such as STL in the places searched by makedepend (takes too long)
+# *wdh* temporarily add -Wno-deprecated -- fix these later
+CC_INCLUDES_FOR_DEPEND =  $(Include)  -DUSE_MESA -I$(APlusPlus)/include -I$(OpenGL)/include -I$(XLIBS)/include  $(BOXLIB_DEFS) -Wno-deprecated -I$(OV_PERL_INCLUDE)
+
+STL_INCLUDE = 
+CC_INCLUDES = $(CC_FLAGS) $(CC_INCLUDES_FOR_DEPEND) $(STL_INCLUDE) -DHAS_MODFL_PROTO
+
+CCFLAGS= $(CC_INCLUDES) $(CPP_OPTIMIZATION_FLAG)
+CCFLAGS += -std=gnu++03
+
+# things that are always compile with optimization use this flag
+CCFLAGSO= $(CC_INCLUDES) -O
+
+# things that are always compile with lots of optimization use this flag
+CCFLAGSF= $(CC_INCLUDES) -O
+
+# things that need to be compiled with no optimization use the following
+CCFLAGSG= $(CC_INCLUDES) -g
+
+# Notes: There seems to be problems using -O with g77
+#        Some older versions of the egcs compiler also had trouble with -fPIC, removing it seemed to work.
+FFLAGS=    $(FF_FLAGS)   -fdefault-real-8 -fdefault-double-8 $(FORTRAN_OPTIMIZATION_FLAG) $(Include)
+# single precision always:
+FFLAGSS=  $(FF_FLAGS)  $(FORTRAN_OPTIMIZATION_FLAG)  $(Include)
+FFLAGSSO = ${FF_FLAGS}  $(Include) -O
+FFLAGSO = $(FF_FLAGS)  -fdefault-real-8 -fdefault-double-8 -O $(Include)
+FFLAGSG = $(FF_FLAGS)  -fdefault-real-8 -fdefault-double-8 -g $(Include)
+FFLAGSG2 = $(FF_FLAGS)  -fdefault-real-8 -fdefault-double-8 -g $(Include)
+# The ifort compiler can take for-ever if we use -g so use -O instead
+#ifort FFLAGSG = $(FF_FLAGS)  -fdefault-real-8 -fdefault-double-8 -O $(Include)
+
+# things that are always compile with optimization use these flags
+FFLAGSO= -O $(FF_FLAGS)  -fdefault-real-8 -fdefault-double-8  $(FLAGS) $(Include) 
+FFLAGSSO= -O  $(FF_FLAGS)  $(FLAGS) $(Include)
+
+# here are the hdf libraries (the configure script will change this line for use with hdf5)
+HDF_LIBS = -L$(HDF)/lib -lhdf5 -ljpeg -lz 
+
+FORTRAN_LIBS = 
+FORTRAN_LIBS =-lnsl -lg2c
+
+# On Mavericks with the clang compiler, gfortran is installed separately: 
+#  --old-- gfortran FORTRAN_LIBS =-L/usr/local/gfortran/lib -lgfortran
+
+# Sonoma: add rpath for gfortran
+FORTRAN_LIBS = -Wl,-rpath,/usr/local/gfortran/lib  -L/usr/local/gfortran/lib -lgfortran
+
+
+# This next line will be used with the Portland group compiler (the configure script will set the next line)
+PGI_LIB = 
+#pgf77 FORTRAN_LIBS = $(OV_RPATH)$(PGI_LIB) -L$(PGI_LIB) -lpgftnrtl -lpgmp  -lpgc -lstd
+# This next line will be used with the intel fortran compiler. (the configure script will set the next line)
+# g2c may be needed by lapack (for OverBlown)
+IFORT_LIB = 
+#ifc FORTRAN_LIBS = $(OV_RPATH)$(IFORT_LIB) -L$(IFORT_LIB) -lF90 -lIEPCF90 -lg2c
+# old ifc FORTRAN_LIBS = -Wl,-rpath,/opt/intel/compiler60/ia32/lib -L/opt/intel/compiler60/ia32/lib -lF90 -lIEPCF90 -L/usr/lib/gcc-lib/i386-redhat-linux/2.96 -lg2c
+# Here are the libraries for the new intel compiler (called ifort instead of ifc) (use "ifort -dryrun" to see libraries needed)
+#ifort FORTRAN_LIBS = $(OV_RPATH)$(IFORT_LIB) -L$(IFORT_LIB) -lifcoremt
+
+LIB_TARGETS= lib_date libso_date
+LIB_DEPENDENCIES= ../lib/lib_date
+TEMPLATES= 
+RAPTEMPLATES=
+
+# The KCC compiler should be used to build the static library (for templates)
+AR = ar
+#KCC AR = KCC
+ARFLAGS = ruv  
+#KCC ARFLAGS = -o 
+
+LD = $(CC)
+#LDFLAGS = -Wl,-rpath,$(HDF)/lib -L$(HDF)/lib -lhdf5 -ljpeg -lz -L
+
+LDFLAGS = -Wl,-rpath,$(HDF)/lib -L$(HDF)/lib -lhdf5 -lhdf5_cpp -ljpeg -lz -L
+CXXFLAGS = -I$(HDF)/include
+
+RANLIB = ranlib
+OpenGLibs =-lGL -lGLU 
+
+# OGMGLIB = $(LDFLAGS)$(Overture)/lib -lOgmg
+
+GLIBS=  $(OV_PERL_LIBRARIES) -L$(OPENGL_LIB) $(OpenGLibs) -L$(MOTIF_LIB) -lXm  $(OV_X_LIBRARIES) $(LAPACK_LIBRARIES) -lm
+
+FLIBS= $(LDFLAGS)$(Overture)/lib $(LibOverture) $(HDF_LIBS) $(FORTRAN_LIBS) $(AppLibraries) 
+# SOFLAGS = -dynamiclib -single_module -Wl-bind_at_load $(LDFLAGS)$(Overture)/lib  $(GLIBS) $(HDF_LIBS) $(FORTRAN_LIBS) $(AppLibraries)
+# *wdh* 2014/08/23 SOFLAGS = -dynamiclib -single_module -undefined suppress -flat_namespace $(LDFLAGS)$(Overture)/lib  $(GLIBS) $(HDF_LIBS) $(FORTRAN_LIBS) $(AppLibraries)
+# wdh: NOTE: do NOT link to libApp when building dylibs as this can create duplicate versions of static class members such as Where_Statement_Mask
+# in A++ which causes where statements to fail
+## SOFLAGS = -dynamiclib -single_module -undefined suppress -flat_namespace
+SOFLAGS = -dynamiclib -shared -undefined dynamic_lookup 
+
+OLIBS = $(LDFLAGS)$(Overture)/lib $(LibOverture)
+RLIBS = $(LDFLAGS)$(Overture)/lib $(LibRapsodi)
+# *wdh* 2014/08/23  LIBLIBS = $(GLIBS) $(LDFLAGS)$(Overture)/lib -lOverture_static $(HDF_LIBS) $(FORTRAN_LIBS) $(AppLibraries) -Wl-weak-framework,vecLib 
+# *wdh* 2014/08/23  -- remove AppLibraries
+# *wdh* 2020/12/05  -- ADD back AppLibraries for parallel 
+LIBLIBS = $(GLIBS) $(LDFLAGS)$(Overture)/lib -lOverture_static $(AppLibraries) $(HDF_LIBS) $(FORTRAN_LIBS) 
+# RLIBLIBS = $(GLIBS) $(LDFLAGS)$(Overture)/lib -lOverture -lOverture_static $(HDF_LIBS) $(FORTRAN_LIBS) $(AppLibraries) -Wl-weak-framework,vecLib 
+RLIBLIBS = $(GLIBS) $(HDF_LIBS) $(FORTRAN_LIBS) $(AppLibraries)
+
+#
+#
+# Primer examples:
+#    type `make programName' to make the example called `programName', see the
+#       possible program names below
+#    type `make' to make all examples
+#
+
+BUILDDIR = ../build
+
+Source= HydeCompositeGrid.C HydeGridData.C HydeInterpData.C inAndOut.C inandOutHDF5.C gridShim.C 
+
+# Here are the things we can make
+PROGRAMS = $(BUILDDIR)/gridShim
+#PROGRAMS = gridShim
+DEPEND = $(BUILDDIR)/depend
+DEPEND_DATE = $(BUILDDIR)/depend_date
+
+all:  depend_date $(PROGRAMS)
+
+.SUFFIXES:
+.SUFFIXES: .C .C .o .f 
+
+.C.o :;	$(CC) $(CCFLAGS) -c $*.C
+.f.o:; $(FC) $(FFLAGS) -c $*.f
+.C: $(LIB_DEPENDENCIES)
+	 $(CC) $(CCFLAGS) -o $@ $< $(CLIBS) $(FLIBS)  $(GLIBS)
+
+gridShim = $(BUILDDIR)/gridShim.o $(BUILDDIR)/inAndOutHDF5.o $(BUILDDIR)/HydeCompositeGrid.o $(BUILDDIR)/HydeGridData.o $(BUILDDIR)/HydeInterpData.o
+$(BUILDDIR)/gridShim: $(gridShim)
+	$(CC) $(CCFLAGS) -o $@ $(gridShim) $(CLIBS) $(FLIBS) $(GLIBS) $(LIBS)
+
+$(BUILDDIR)/%.o: %.C
+	$(CC) $(CCFLAGS) -c $< -o $@
+
+
+
+# simplified interface for compiling user programs
+getFlags: $(Overture)/bin/makeGetFlags
+	/bin/rm -f  getFlags
+	$(Overture)/bin/makeGetFlags \
+	   --cflags '$(CFLAGS)' --ccflags '$(CCFLAGS)'  \
+	   --fflags '$(FFLAGS)' --clibs '$(CLIBS)'        \
+	   --flibs '$(FLIBS)' --glibs '$(GLIBS)'          \
+	   --libs  '$(CLIBS) $(FLIBS) $(GLIBS)' > getFlags
+	chmod u+x getFlags
+
+clean:  
+	rm -f $(PROGRAMS) *.o 
+
+depend_date: depend; perl $(Overture)/config/makeDepend -f depend -Y -- $(CC_INCLUDES_FOR_DEPEND) -- $(Source)
+	touch $@
+# include the dependencies here
+include depend
+
+.PRECIOUS: depend_date
+

@@ -170,14 +170,16 @@ ARFLAGS = ruv
 #KCC ARFLAGS = -o 
 
 LD = $(CC)
-//LDFLAGS = -L -Wl,-rpath,/$(HDF)/lib -L/$(HDF)/lib -lhdf5_cpp -lhdf5 -ljpeg -lz
-LDFLAGS = -L/$(OvertureBuild)/lib \
-          -Wl,-rpath,/$(HDF)/lib -L/$(HDF)/lib -lhdf5 -lhdf5_cpp -ljpeg -lz \
-          -lgfortran -Wl,-rpath,/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -L/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -lperl -ldl -lm -lpthread -lc -lcrypt \
-          -Wl,-rpath,/usr/opengl/lib64 -L/usr/opengl/lib64 -lGL -lGLU -lGLw -lOpenGL \
-          -Wl,-rpath,/usr/motif/lib64 -L/usr/motif/lib64 -lXm -L/lib/x86_64-linux-gnu/lib64 -lXt -lXmu -lXi -lXext -lX11 \
-          -Wl,-rpath,/$(APlusPlus)/lib -L/$(APlusPlus)/lib -lApp -lApp_static \
-          -Wl,-rpath,/lib/x86_64-linux-gnu/ -L/lib/x86_64-linux-gnu/
+#LDFLAGS = -L -Wl,-rpath,/$(HDF)/lib -L/$(HDF)/lib -lhdf5_cpp -lhdf5 -ljpeg -lz
+# LDFLAGS = -L/$(OvertureBuild)/lib \
+#           -Wl,-rpath,/$(HDF)/lib -L/$(HDF)/lib -lhdf5 -lhdf5_cpp -ljpeg -lz \
+#           -lgfortran -Wl,-rpath,/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -L/usr/lib/x86_64-linux-gnu/perl/5.34/CORE -lperl -ldl -lm -lpthread -lc -lcrypt \
+#           -Wl,-rpath,/usr/opengl/lib64 -L/usr/opengl/lib64 -lGL -lGLU -lGLw -lOpenGL \
+#           -Wl,-rpath,/usr/motif/lib64 -L/usr/motif/lib64 -lXm -L/lib/x86_64-linux-gnu/lib64 -lXt -lXmu -lXi -lXext -lX11 \
+#           -Wl,-rpath,/$(APlusPlus)/lib -L/$(APlusPlus)/lib -lApp -lApp_static \
+#           -Wl,-rpath,/lib/x86_64-linux-gnu/ -L/lib/x86_64-linux-gnu/
+
+LDFLAGS = -Wl,-rpath,$(HDF)/lib -L$(HDF)/lib -lhdf5 -lhdf5_cpp -ljpeg -lz -L
 
 LIBS = 
 
