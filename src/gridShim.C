@@ -61,7 +61,7 @@ int getFileNameData(    int             argc,
     if( argc == 3 )                                                                      
     {                                                                
         *nameOfOGFile    = argv[1];                                   
-        *nameOfNewFile   = argv[2];                                   
+        *nameOfNewFile   = argv[2];                         
     }                                                                                           
     else                                                             
     {                                                                
@@ -83,15 +83,24 @@ int getFileNameData(    int             argc,
         fileDir = "/home/overture/overture-hyde-shim/hydeGrids/";        
     }                                                                
     else if ( *newFileExtension == "txt" )                             
-    {                                                                
+    {
         printF( "Reading from txt file: %s \n", *nameOfOGFile );     
         fileDir = "/home/overture/overture-hyde-shim/textOutput/";        
-    }   
-    else                                                             
-    {                                                                
-        printF( "Error: File %s has no extension or is not a .hdf file \n", nameOfOGFile );   
-        Overture::abort( "error" );                                  
-    }                                                                
+	}
+	
+	
+	// Get current working directory
+	char cwd[1024];
+	if ( getcwd( cwd, sizeof( cwd ) ) != NULL )
+	{
+		fileDir = cwd;
+		strcat( cwd, "/" );
+	}
+	else
+	{
+		printF("Error: Unable to get current working directory\n");
+		Overture::abort("error");
+	}
 
                                                                      
 	// Comment
@@ -200,7 +209,7 @@ int main( int argc, char *argv[] )
     ////////////////////////////////////////////////////////////////////////////////
 
 
-    printF( "Output written to file %s\n", nameOfNewFile );
+    printF( "Output written to file %s\n", saveLocation );
     
     Overture::finish();     
 
