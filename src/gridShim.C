@@ -34,8 +34,8 @@ int startOverture( int argc, char *argv[] )
 
 std::string getFileExtension(  const char*     fileName )
 {
-    std::string       fileNameStr( fileName );
-    size_t pos      = fileNameStr.find_last_of( "." );
+    std::string       	fileNameStr( fileName );
+    size_t 				pos      						= fileNameStr.find_last_of( "." );
 
     if ( pos == std::string::npos ) 
     {
@@ -43,7 +43,7 @@ std::string getFileExtension(  const char*     fileName )
         Overture::abort( "error" );  
     }                                                             
 
-    return fileNameStr.substr( pos + 1 );
+    return 		fileNameStr.substr( pos + 1 );
 }
 
 
