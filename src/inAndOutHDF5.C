@@ -246,24 +246,21 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			////////////////////////////////////////////////////////////////////////////////////////
 			////////////////////////////////////////////////////////////////////////////////////////
 
-			if ( hydeGridData -> gridType == "Cartesian" )
-			{
-				////////////////////////////////////////////////////////////////////////////////////////
-				// Set dx ////////////////////////////////////////////////////////////////////////////
-				DataSpace   		dxSpace( 1, gridSpacingIntSize );
+			////////////////////////////////////////////////////////////////////////////////////////
+			// Set dx ////////////////////////////////////////////////////////////////////////////
+			DataSpace   		dxSpace( 1, gridSpacingIntSize );
 
-				dataset 														= new 	DataSet( 
-																									group.createDataSet(  	"dx", 
-																															PredType::NATIVE_DOUBLE, 
-																															dxSpace ) 
-																								);
-				dataset ->      write(  &( hydeGridData -> dx ), 
-										PredType::NATIVE_DOUBLE );
+			dataset 														= new 	DataSet( 
+																								group.createDataSet(  	"dx", 
+																														PredType::NATIVE_DOUBLE, 
+																														dxSpace ) 
+																							);
+			dataset ->      write(  &( hydeGridData -> dx ), 
+									PredType::NATIVE_DOUBLE );
 
-				delete 				dataset;
-				////////////////////////////////////////////////////////////////////////////////////////
-				////////////////////////////////////////////////////////////////////////////////////////
-			}
+			delete 				dataset;
+			////////////////////////////////////////////////////////////////////////////////////////
+			////////////////////////////////////////////////////////////////////////////////////////
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set interior box /////////////////////////////////////////////////////////////////
@@ -297,23 +294,20 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			/////////////////////////////////////////////////////////////////////////////////////
 			/////////////////////////////////////////////////////////////////////////////////////
 
-			if ( hydeGridData -> gridType == "Cartesian" )
-			{
-				/////////////////////////////////////////////////////////////////////////////////////
-				// Set interior box /////////////////////////////////////////////////////////////////
-				dataset 									= new 	DataSet( 
-																				group.createDataSet(  	"interiorBox", 
-																										PredType::NATIVE_DOUBLE, 
-																										boxspace ) 
-																			);
-				dataset ->      write(  &( hydeGridData -> interiorBox ), 
-										PredType::NATIVE_DOUBLE );
+			/////////////////////////////////////////////////////////////////////////////////////
+			// Set interior box /////////////////////////////////////////////////////////////////
+			dataset 									= new 	DataSet( 
+																			group.createDataSet(  	"interiorBox", 
+																									PredType::NATIVE_DOUBLE, 
+																									boxspace ) 
+																		);
+			dataset ->      write(  &( hydeGridData -> interiorBox ), 
+									PredType::NATIVE_DOUBLE );
 
-				delete 			dataset;
-				/////////////////////////////////////////////////////////////////////////////////////
-				/////////////////////////////////////////////////////////////////////////////////////
+			delete 			dataset;
+			/////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////
 
-			}
 
 
 			/////////////////////////////////////////////////////////////////////////////////////
@@ -450,299 +444,308 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			/////////////////////////////////////////////////////////////////////////////////////
 			/////////////////////////////////////////////////////////////////////////////////////
 		
-			////////////////////////////////////////////////////////////////////////////////////////
-			// Set jacobDet ////////////////////////////////////////////////////////////////////////
-			hsize_t     	interpJacobDetSize[] 						= { static_cast<hsize_t>( hydeGridData -> jacobDet -> rows ),
-																			static_cast<hsize_t>( hydeGridData -> jacobDet -> cols ) };
-			DataSpace   		interpNumPtsSpace( 2, interpJacobDetSize );
-			dataset 														= new 	DataSet( 
-																								group.createDataSet(  	"jacobDet", 
-																														PredType::NATIVE_DOUBLE, 
-																														interpNumPtsSpace ) 
-																							);
-
-			// Dynamically allocate memory for large arrays to avoid stack overflow
-			totalSize 										= static_cast<size_t>(hydeGridData -> jacobDet -> rows) 
-																				* hydeGridData -> jacobDet -> cols;
-			double 			*jacobDet_placeholder 			= new double[totalSize];
-
-			for( int i = 0; i < hydeGridData -> jacobDet -> rows; i++ )
+			if ( hydeGridData -> gridType == "Curvilinear" )
 			{
-				for( int j = 0; j < hydeGridData -> jacobDet -> cols; j++ )
+				////////////////////////////////////////////////////////////////////////////////////////
+				// Set jacobDet ////////////////////////////////////////////////////////////////////////
+				hsize_t     	interpJacobDetSize[] 						= { static_cast<hsize_t>( hydeGridData -> jacobDet -> rows ),
+																				static_cast<hsize_t>( hydeGridData -> jacobDet -> cols ) };
+				DataSpace   		interpNumPtsSpace( 2, interpJacobDetSize );
+				dataset 														= new 	DataSet( 
+																									group.createDataSet(  	"jacobDet", 
+																															PredType::NATIVE_DOUBLE, 
+																															interpNumPtsSpace ) 
+																								);
+
+				// Dynamically allocate memory for large arrays to avoid stack overflow
+				totalSize 										= static_cast<size_t>(hydeGridData -> jacobDet -> rows) 
+																					* hydeGridData -> jacobDet -> cols;
+				double 			*jacobDet_placeholder 			= new double[totalSize];
+
+				for( int i = 0; i < hydeGridData -> jacobDet -> rows; i++ )
 				{
-					size_t 		index 			= static_cast<size_t>(i) * hydeGridData -> jacobDet -> cols + j;
-
-					jacobDet_placeholder[ index ] = hydeGridData 
-													-> jacobDet 
-														-> data[ i ][ j ];
-				}
-			}
-			
-			dataset ->      write(  jacobDet_placeholder, 
-									PredType::NATIVE_DOUBLE );
-
-			// Clean up dynamically allocated memory
-			delete[] jacobDet_placeholder;
-
-			delete 				dataset;
-			////////////////////////////////////////////////////////////////////////////////////////
-			////////////////////////////////////////////////////////////////////////////////////////
-
-
-			/////////////////////////////////////////////////////////////////////////////////////
-			// Set rx ///////////////////////////////////////////////////////////////////////////
-			hsize_t   		gridsize3[] 				= { static_cast<hsize_t> ( maskDim1 ), 
-															static_cast<hsize_t> ( maskDim2 ), 
-															static_cast<hsize_t> ( numOfDimensions), 
-															static_cast<hsize_t> ( numOfDimensions ) };
-
-			DataSpace 		rxSpace(  	4, 
-										gridsize3 );
-			
-			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"rx", 
-																									PredType::NATIVE_DOUBLE, 
-																									rxSpace ) 
-																		);
-
-			// Create contiguous memory layout for HDF5
-			totalSize 									= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions * numOfDimensions;
-			double 			*rx_Placeholder 			= new double[totalSize];
-
-			// Copy data in row-major order (C-style)
-			for( int i = 0; i < maskDim1; i++ )
-			{
-				for( int j = 0; j < maskDim2; j++ )
-				{
-					for( int k = 0; k < numOfDimensions; k++ )
+					for( int j = 0; j < hydeGridData -> jacobDet -> cols; j++ )
 					{
-						for( int l = 0; l < numOfDimensions; l++ )
+						size_t 		index 			= static_cast<size_t>(i) * hydeGridData -> jacobDet -> cols + j;
+
+						jacobDet_placeholder[ index ] = hydeGridData 
+														-> jacobDet 
+															-> data[ i ][ j ];
+					}
+				}
+				
+				dataset ->      write(  jacobDet_placeholder, 
+										PredType::NATIVE_DOUBLE );
+
+				// Clean up dynamically allocated memory
+				delete[] jacobDet_placeholder;
+
+				delete 				dataset;
+				////////////////////////////////////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////////////////////////////////////
+
+
+				/////////////////////////////////////////////////////////////////////////////////////
+				// Set rx ///////////////////////////////////////////////////////////////////////////
+				hsize_t   		gridsize3[] 				= { static_cast<hsize_t> ( maskDim1 ), 
+																static_cast<hsize_t> ( maskDim2 ), 
+																static_cast<hsize_t> ( numOfDimensions), 
+																static_cast<hsize_t> ( numOfDimensions ) };
+
+				DataSpace 		rxSpace(  	4, 
+											gridsize3 );
+				
+				dataset 									= new 	DataSet( 
+																				group.createDataSet(  	"rx", 
+																										PredType::NATIVE_DOUBLE, 
+																										rxSpace ) 
+																			);
+
+				// Create contiguous memory layout for HDF5
+				totalSize 									= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions * numOfDimensions;
+				double 			*rx_Placeholder 			= new double[totalSize];
+
+				// Copy data in row-major order (C-style)
+				for( int i = 0; i < maskDim1; i++ )
+				{
+					for( int j = 0; j < maskDim2; j++ )
+					{
+						for( int k = 0; k < numOfDimensions; k++ )
 						{
-							size_t 		index 			= ((static_cast<size_t>(i) * maskDim2 + j) * numOfDimensions + k) * numOfDimensions + l;
-							
-							rx_Placeholder[index] 		= hydeGridData->rx->data[i][j][k][l];
+							for( int l = 0; l < numOfDimensions; l++ )
+							{
+								size_t 		index 			= ((static_cast<size_t>(i) * maskDim2 + j) * numOfDimensions + k) * numOfDimensions + l;
+								
+								rx_Placeholder[index] 		= hydeGridData->rx->data[i][j][k][l];
+							}
 						}
 					}
 				}
-			}
 
-			dataset ->      write(  rx_Placeholder, 
-									PredType::NATIVE_DOUBLE );
+				dataset ->      write(  rx_Placeholder, 
+										PredType::NATIVE_DOUBLE );
 
-			// Clean up contiguous array
-			delete[] rx_Placeholder;
+				// Clean up contiguous array
+				delete[] rx_Placeholder;
 
-			delete 			dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
+				delete 			dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
 
 
-			/////////////////////////////////////////////////////////////////////////////////////
-			// Set rx_inv ///////////////////////////////////////////////////////////////////////////
-			
-			dataset 									= new 	DataSet( 
-																			group.createDataSet(  	"rxInv", 
-																									PredType::NATIVE_DOUBLE, 
-																									rxSpace ) 
-																		);
+				/////////////////////////////////////////////////////////////////////////////////////
+				// Set rx_inv ///////////////////////////////////////////////////////////////////////////
+				
+				dataset 									= new 	DataSet( 
+																				group.createDataSet(  	"rxInv", 
+																										PredType::NATIVE_DOUBLE, 
+																										rxSpace ) 
+																			);
 
-			// Create contiguous memory layout for HDF5
-			totalSize 										= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions * numOfDimensions;
-			double 				*rxInv_Placeholder 			= new double[totalSize];
+				// Create contiguous memory layout for HDF5
+				totalSize 										= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions * numOfDimensions;
+				double 				*rxInv_Placeholder 			= new double[totalSize];
 
-			// Copy data in row-major order (C-style)
-			for( int i = 0; i < maskDim1; i++ )
-			{
-				for( int j = 0; j < maskDim2; j++ )
+				// Copy data in row-major order (C-style)
+				for( int i = 0; i < maskDim1; i++ )
 				{
-					for( int k = 0; k < numOfDimensions; k++ )
+					for( int j = 0; j < maskDim2; j++ )
 					{
-						for( int l = 0; l < numOfDimensions; l++ )
+						for( int k = 0; k < numOfDimensions; k++ )
 						{
-							size_t 		index 				= ((static_cast<size_t>(i) * maskDim2 + j) * numOfDimensions + k) * numOfDimensions + l;
-							rxInv_Placeholder[index] 		= hydeGridData->rx_inv->data[i][j][k][l];
+							for( int l = 0; l < numOfDimensions; l++ )
+							{
+								size_t 		index 				= ((static_cast<size_t>(i) * maskDim2 + j) * numOfDimensions + k) * numOfDimensions + l;
+								rxInv_Placeholder[index] 		= hydeGridData->rx_inv->data[i][j][k][l];
+							}
 						}
 					}
 				}
+
+				dataset ->      write(  rxInv_Placeholder, 
+										PredType::NATIVE_DOUBLE );
+
+				// Clean up contiguous array
+				delete[] rxInv_Placeholder;
+
+				delete 			dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
 			}
 
-			dataset ->      write(  rxInv_Placeholder, 
-									PredType::NATIVE_DOUBLE );
-
-			// Clean up contiguous array
-			delete[] rxInv_Placeholder;
-
-			delete 			dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
 
 
-			HydeInterpData 	*hydeInterpData 				= hydeCompositeGrid -> hydeInterpData[ gridIndex ];
-
-			// Create a grid group in the file.
-			Group 			group2( compGridGroup.createGroup( "interpData" + std::to_string( gridIndex ) ) );
-
-			/////////////////////////////////////////////////////////////////////////////////////
-			// Set grid number ///////////////////////////////////////////////////////////////////
-			hsize_t     	interpGridNumIntSize[] 						= {1};
-			DataSpace   		interpGridNumSpace( 1, interpGridNumIntSize );
-			dataset 														= new 	DataSet( 
-																								group2.createDataSet(  	"numOfInterpPts", 
-																														PredType::NATIVE_INT, 
-																														interpGridNumSpace ) 
-																							);
-			dataset ->      write(  &( hydeInterpData -> numOfInterpPts ), 
-									PredType::NATIVE_INT );
-			delete 				dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
-
-
-			hsize_t   		numInterpPtsIntSize[] 			= { static_cast<hsize_t>( hydeInterpData -> allInterpPtsIndices -> rows ),
-																static_cast<hsize_t>( hydeInterpData -> allInterpPtsIndices -> cols ) };
-			DataSpace 		numInterpPtsSpace( 	2, 
-												numInterpPtsIntSize );
-			
-			dataset 									= new 	DataSet( 
-																			group2.createDataSet(  	"interpPtsIndices", 
-																									PredType::NATIVE_INT, 
-																									numInterpPtsSpace ) 
-																		);
-
-			// Dynamically allocate memory for arrays to avoid stack overflow
-			totalSize 													= static_cast<size_t>(hydeInterpData -> allInterpPtsIndices -> rows) 
-																							* hydeInterpData -> allInterpPtsIndices -> cols;
-			int 				*interpPtsIndices_Placeholder 			= new int[totalSize];
-			
-			for( int i = 0; i < ( hydeInterpData -> allInterpPtsIndices -> rows ); i++ )
+			if ( hydeCompositeGrid -> numOfGrids > 1 )
 			{
-				for( int j = 0; j < ( hydeInterpData -> allInterpPtsIndices -> cols ); j++ )
+				HydeInterpData 	*hydeInterpData 				= hydeCompositeGrid -> hydeInterpData[ gridIndex ];
+
+				// Create a grid group in the file.
+				Group 			group2( compGridGroup.createGroup( "interpData" + std::to_string( gridIndex ) ) );
+
+				/////////////////////////////////////////////////////////////////////////////////////
+				// Set grid number ///////////////////////////////////////////////////////////////////
+				hsize_t     	interpGridNumIntSize[] 						= {1};
+				DataSpace   		interpGridNumSpace( 1, interpGridNumIntSize );
+				dataset 														= new 	DataSet( 
+																									group2.createDataSet(  	"numOfInterpPts", 
+																															PredType::NATIVE_INT, 
+																															interpGridNumSpace ) 
+																								);
+				dataset ->      write(  &( hydeInterpData -> numOfInterpPts ), 
+										PredType::NATIVE_INT );
+				delete 				dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
+
+
+				hsize_t   		numInterpPtsIntSize[] 			= { static_cast<hsize_t>( hydeInterpData -> allInterpPtsIndices -> rows ),
+																	static_cast<hsize_t>( hydeInterpData -> allInterpPtsIndices -> cols ) };
+				DataSpace 		numInterpPtsSpace( 	2, 
+													numInterpPtsIntSize );
+				
+				dataset 									= new 	DataSet( 
+																				group2.createDataSet(  	"interpPtsIndices", 
+																										PredType::NATIVE_INT, 
+																										numInterpPtsSpace ) 
+																			);
+
+				// Dynamically allocate memory for arrays to avoid stack overflow
+				totalSize 													= static_cast<size_t>(hydeInterpData -> allInterpPtsIndices -> rows) 
+																								* hydeInterpData -> allInterpPtsIndices -> cols;
+				int 				*interpPtsIndices_Placeholder 			= new int[totalSize];
+				
+				for( int i = 0; i < ( hydeInterpData -> allInterpPtsIndices -> rows ); i++ )
 				{
-					size_t 		index 				= static_cast<size_t>(i) * hydeInterpData -> allInterpPtsIndices -> cols + j;
-					interpPtsIndices_Placeholder[ index ] 		= hydeInterpData 
-																		-> allInterpPtsIndices 
+					for( int j = 0; j < ( hydeInterpData -> allInterpPtsIndices -> cols ); j++ )
+					{
+						size_t 		index 				= static_cast<size_t>(i) * hydeInterpData -> allInterpPtsIndices -> cols + j;
+						interpPtsIndices_Placeholder[ index ] 		= hydeInterpData 
+																			-> allInterpPtsIndices 
+																				-> data[ i ][ j ];
+					}
+				}
+
+				dataset ->      write(  interpPtsIndices_Placeholder, 
+										PredType::NATIVE_INT );
+
+				// Clean up dynamically allocated memory
+				delete[] interpPtsIndices_Placeholder;
+
+
+				delete 			dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
+				dataset 									= new 	DataSet( 
+																				group2.createDataSet(  	"interpPtsCoords", 
+																										PredType::NATIVE_DOUBLE, 
+																										numInterpPtsSpace ) 
+																			);
+
+				// Dynamically allocate memory for arrays to avoid stack overflow
+				totalSize 													= static_cast<size_t>(hydeInterpData -> allInterpPtsCoords -> rows) 
+																								* hydeInterpData -> allInterpPtsCoords -> cols;
+				double 				*interpPtsCoords_Placeholder 			= new double[totalSize];
+
+				for( int i = 0; i < ( hydeInterpData -> allInterpPtsCoords -> rows ); i++ )
+				{
+					for( int j = 0; j < ( hydeInterpData -> allInterpPtsCoords -> cols ); j++ )
+					{
+						size_t 		index 				= static_cast<size_t>(i) * hydeInterpData -> allInterpPtsCoords -> cols + j;
+
+						interpPtsCoords_Placeholder[ index ] 		= hydeInterpData 
+																			-> allInterpPtsCoords 
+																				-> data[ i ][ j ];
+					}
+				}
+
+				dataset ->      write(  interpPtsCoords_Placeholder, 
+										PredType::NATIVE_DOUBLE );
+
+				// Clean up dynamically allocated memory
+				delete[] interpPtsCoords_Placeholder;
+
+				delete 			dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
+				dataset 									= new 	DataSet( 
+																				group2.createDataSet(  	"sigPtsIndices", 
+																										PredType::NATIVE_INT, 
+																										numInterpPtsSpace ) 
+																			);
+				// Dynamically allocate memory for arrays to avoid stack overflow
+				totalSize 													= static_cast<size_t>(hydeInterpData -> allSigPtsIndices -> rows) 
+																								* hydeInterpData -> allSigPtsIndices -> cols;
+				int 				*sigInterpGrid_Placeholder 			= new int[totalSize];
+
+				for( int i = 0; i < ( hydeInterpData -> allSigPtsIndices -> rows ); i++ )
+				{
+					for ( int j = 0; j < ( hydeInterpData -> allSigPtsIndices -> cols ); j++ )
+					{
+						size_t 		index 						= static_cast<size_t>(i) * hydeInterpData -> allSigPtsIndices -> cols + j;
+
+						sigInterpGrid_Placeholder[ index ] 		= hydeInterpData 
+																		-> allSigPtsIndices 
 																			-> data[ i ][ j ];
+					}
 				}
-			}
 
-			dataset ->      write(  interpPtsIndices_Placeholder, 
-									PredType::NATIVE_INT );
+				dataset ->      write(  sigInterpGrid_Placeholder, 
+										PredType::NATIVE_INT );
 
-			// Clean up dynamically allocated memory
-			delete[] interpPtsIndices_Placeholder;
+				// Clean up dynamically allocated memory
+				delete[] sigInterpGrid_Placeholder;
+
+				delete 			dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
 
 
-			delete 			dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
-			dataset 									= new 	DataSet( 
-																			group2.createDataSet(  	"interpPtsCoords", 
-																									PredType::NATIVE_DOUBLE, 
-																									numInterpPtsSpace ) 
-																		);
+				hsize_t   		numInterpPtsIntSize2[] 			= { static_cast<hsize_t>( hydeInterpData -> sigGridNumbers -> size ) };
+				DataSpace 		numInterpPtsSpace2( 1, 
+													numInterpPtsIntSize2 );
 
-			// Dynamically allocate memory for arrays to avoid stack overflow
-			totalSize 													= static_cast<size_t>(hydeInterpData -> allInterpPtsCoords -> rows) 
-																							* hydeInterpData -> allInterpPtsCoords -> cols;
-			double 				*interpPtsCoords_Placeholder 			= new double[totalSize];
-
-			for( int i = 0; i < ( hydeInterpData -> allInterpPtsCoords -> rows ); i++ )
-			{
-				for( int j = 0; j < ( hydeInterpData -> allInterpPtsCoords -> cols ); j++ )
+				dataset 									= new 	DataSet( 
+																				group2.createDataSet(  	"interpWidth", 
+																										PredType::NATIVE_INT, 
+																										numInterpPtsSpace2 ) 
+																			);
+				// Not sure why this is needed for now...
+				int 			interpWidth_Placeholder[ hydeInterpData -> interpWidth -> size ];
+				for( int i = 0; i < ( hydeInterpData -> interpWidth -> size ); i++ )
 				{
-					size_t 		index 				= static_cast<size_t>(i) * hydeInterpData -> allInterpPtsCoords -> cols + j;
-
-					interpPtsCoords_Placeholder[ index ] 		= hydeInterpData 
-																		-> allInterpPtsCoords 
-																			-> data[ i ][ j ];
+					interpWidth_Placeholder[ i ] 		= hydeInterpData 
+															-> interpWidth 
+																-> data[ i ];
 				}
-			}
 
-			dataset ->      write(  interpPtsCoords_Placeholder, 
-									PredType::NATIVE_DOUBLE );
+				dataset ->      write(  &interpWidth_Placeholder, 
+										PredType::NATIVE_INT );
 
-			// Clean up dynamically allocated memory
-			delete[] interpPtsCoords_Placeholder;
+				delete 			dataset;
+				/////////////////////////////////////////////////////////////////////////////////////
+				/////////////////////////////////////////////////////////////////////////////////////
 
-			delete 			dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
-			dataset 									= new 	DataSet( 
-																			group2.createDataSet(  	"sigPtsIndices", 
-																									PredType::NATIVE_INT, 
-																									numInterpPtsSpace ) 
-																		);
-			// Dynamically allocate memory for arrays to avoid stack overflow
-			totalSize 													= static_cast<size_t>(hydeInterpData -> allSigPtsIndices -> rows) 
-																							* hydeInterpData -> allSigPtsIndices -> cols;
-			int 				*sigInterpGrid_Placeholder 			= new int[totalSize];
 
-			for( int i = 0; i < ( hydeInterpData -> allSigPtsIndices -> rows ); i++ )
-			{
-				for ( int j = 0; j < ( hydeInterpData -> allSigPtsIndices -> cols ); j++ )
+				dataset 									= new 	DataSet( 
+																				group2.createDataSet(  	"sigGridNumbers", 
+																										PredType::NATIVE_INT, 
+																										numInterpPtsSpace2 ) 
+																			);
+				// Not sure why this is needed for now...
+				int 			sigGridNumbers_Placeholder[ hydeInterpData -> sigGridNumbers -> size ];
+				for( int i = 0; i < ( hydeInterpData -> sigGridNumbers -> size ); i++ )
 				{
-					size_t 		index 						= static_cast<size_t>(i) * hydeInterpData -> allSigPtsIndices -> cols + j;
-
-					sigInterpGrid_Placeholder[ index ] 		= hydeInterpData 
-																	-> allSigPtsIndices 
-																		-> data[ i ][ j ];
+					sigGridNumbers_Placeholder[ i ] 			= hydeInterpData 
+																	-> sigGridNumbers 
+																		-> data[ i ];  // Assuming sigGridNumbers is 1D
 				}
+
+				dataset ->      write(  &sigGridNumbers_Placeholder, 
+										PredType::NATIVE_INT );
+				delete 			dataset;
 			}
 
-			dataset ->      write(  sigInterpGrid_Placeholder, 
-									PredType::NATIVE_INT );
 
-			// Clean up dynamically allocated memory
-			delete[] sigInterpGrid_Placeholder;
-
-			delete 			dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
-
-
-			hsize_t   		numInterpPtsIntSize2[] 			= { static_cast<hsize_t>( hydeInterpData -> sigGridNumbers -> size ) };
-			DataSpace 		numInterpPtsSpace2( 1, 
-												numInterpPtsIntSize2 );
-
-			dataset 									= new 	DataSet( 
-																			group2.createDataSet(  	"interpWidth", 
-																									PredType::NATIVE_INT, 
-																									numInterpPtsSpace2 ) 
-																		);
-			// Not sure why this is needed for now...
-			int 			interpWidth_Placeholder[ hydeInterpData -> interpWidth -> size ];
-			for( int i = 0; i < ( hydeInterpData -> interpWidth -> size ); i++ )
-			{
-				interpWidth_Placeholder[ i ] 		= hydeInterpData 
-														-> interpWidth 
-															-> data[ i ];
-			}
-
-			dataset ->      write(  &interpWidth_Placeholder, 
-									PredType::NATIVE_INT );
-
-			delete 			dataset;
-			/////////////////////////////////////////////////////////////////////////////////////
-			/////////////////////////////////////////////////////////////////////////////////////
-
-
-			dataset 									= new 	DataSet( 
-																			group2.createDataSet(  	"sigGridNumbers", 
-																									PredType::NATIVE_INT, 
-																									numInterpPtsSpace2 ) 
-																		);
-			// Not sure why this is needed for now...
-			int 			sigGridNumbers_Placeholder[ hydeInterpData -> sigGridNumbers -> size ];
-			for( int i = 0; i < ( hydeInterpData -> sigGridNumbers -> size ); i++ )
-			{
-				sigGridNumbers_Placeholder[ i ] 			= hydeInterpData 
-																-> sigGridNumbers 
-																	-> data[ i ];  // Assuming sigGridNumbers is 1D
-			}
-
-			dataset ->      write(  &sigGridNumbers_Placeholder, 
-									PredType::NATIVE_INT );
-			delete 			dataset;
 		}
 
 
@@ -783,11 +786,9 @@ int getFromHDF5(    const char     			*fileName,
 
 	/////////////////////////////////////////////////////////////////////////////////
 	// Initialize number of component grids and dimension of grid data /////////////
-	int 		numOfGrids        		= compositeGrid.numberOfComponentGrids();
-	// *numberOfComponentGrids   			= numOfGrids;
+	int 		numOfGrids 				= ( compositeGrid.numberOfComponentGrids() == 0 ) ? 1 : compositeGrid.numberOfComponentGrids();
 
 	int 		numOfDimensions       	= compositeGrid.numberOfDimensions();
-	// *numberOfDimensions       			= numOfDimensions;
 
 
 	// hydeCompositeGrid 					= new HydeCompositeGrid( 	fileName,
