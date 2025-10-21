@@ -43,6 +43,24 @@ struct Array3D
         std::cout << "Allocated Array3D of dimensions " << dim1 << "x" << dim2 << "x" << dim3 << std::endl; // Debugging
     }
 
+
+    // Method to fill the array with a single value
+    void fill( const T& value ) 
+    {
+
+        for (int i = 0; i < dim1; ++i) 
+        {
+            for (int j = 0; j < dim2; ++j) 
+            {
+                for (int k = 0; k < dim3; ++k) 
+                {
+                    data[ i ][ j ][ k ] = value;
+                }
+            }
+        }
+
+    }
+
     // Method to deallocate the array
     void deallocate(  ) 
     {
