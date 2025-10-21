@@ -423,7 +423,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 			// Dynamically allocate memory for large arrays to avoid stack overflow
 			totalSize 									= static_cast<size_t>(maskDim1 * maskDim2 * maskDim3 * numOfDimensions);
-			double 			*xy_Placeholder 			= new double[totalSize];
+			double 			*xy_Placeholder 			= new double[ totalSize ];
 
 			for( int i = 0; i < ( maskDim1 ); i++ )
 			{
@@ -472,7 +472,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 				// Dynamically allocate memory for large arrays to avoid stack overflow
 				totalSize 										= static_cast<size_t>(hydeGridData -> jacobDet -> rows) 
 																					* hydeGridData -> jacobDet -> cols;
-				double 			*jacobDet_placeholder 			= new double[totalSize];
+				double 			*jacobDet_placeholder 			= new double[ totalSize ];
 
 				for( int i = 0; i < hydeGridData -> jacobDet -> rows; i++ )
 				{
@@ -501,10 +501,11 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 				// Set rx ///////////////////////////////////////////////////////////////////////////
 				hsize_t   		gridsize3[] 				= { static_cast<hsize_t> ( maskDim1 ), 
 																static_cast<hsize_t> ( maskDim2 ), 
+																static_cast<hsize_t> ( maskDim3 ), 
 																static_cast<hsize_t> ( numOfDimensions), 
 																static_cast<hsize_t> ( numOfDimensions ) };
 
-				DataSpace 		rxSpace(  	4, 
+				DataSpace 		rxSpace(  	5, 
 											gridsize3 );
 				
 				dataset 									= new 	DataSet( 
@@ -514,21 +515,24 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																			);
 
 				// Create contiguous memory layout for HDF5
-				totalSize 									= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions * numOfDimensions;
-				double 			*rx_Placeholder 			= new double[totalSize];
+				totalSize 									= static_cast<size_t>(maskDim1 * maskDim2 * maskDim3 * numOfDimensions * numOfDimensions);
+				double 			*rx_Placeholder 			= new double[ totalSize ];
 
 				// Copy data in row-major order (C-style)
 				for( int i = 0; i < maskDim1; i++ )
 				{
 					for( int j = 0; j < maskDim2; j++ )
 					{
-						for( int k = 0; k < numOfDimensions; k++ )
+						for( int k = 0; k < maskDim3; k++ )
 						{
 							for( int l = 0; l < numOfDimensions; l++ )
 							{
-								size_t 		index 			= ((static_cast<size_t>(i) * maskDim2 + j) * numOfDimensions + k) * numOfDimensions + l;
-								
-								rx_Placeholder[index] 		= hydeGridData->rx->data[i][j][k][l];
+								for ( int m = 0; m < numOfDimensions; m++ )
+								{
+									size_t 		index 			= (((static_cast<size_t>(i) * maskDim2 + j) * maskDim3 + k) * numOfDimensions + l) * numOfDimensions + m;
+									
+									rx_Placeholder[index] 		= hydeGridData->rx->data[i][j][k][l][m];
+								}
 							}
 						}
 					}
@@ -539,6 +543,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 				// Clean up contiguous array
 				delete[] rx_Placeholder;
+				hydeGridData -> rx -> deallocate();
 
 				delete 			dataset;
 				/////////////////////////////////////////////////////////////////////////////////////
@@ -556,19 +561,23 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 				// Create contiguous memory layout for HDF5
 				totalSize 										= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions * numOfDimensions;
-				double 				*rxInv_Placeholder 			= new double[totalSize];
+				double 				*rxInv_Placeholder 			= new double[ totalSize ];
 
 				// Copy data in row-major order (C-style)
 				for( int i = 0; i < maskDim1; i++ )
 				{
 					for( int j = 0; j < maskDim2; j++ )
 					{
-						for( int k = 0; k < numOfDimensions; k++ )
+						for( int k = 0; k < maskDim3; k++ )
 						{
 							for( int l = 0; l < numOfDimensions; l++ )
 							{
-								size_t 		index 				= ((static_cast<size_t>(i) * maskDim2 + j) * numOfDimensions + k) * numOfDimensions + l;
-								rxInv_Placeholder[index] 		= hydeGridData->rx_inv->data[i][j][k][l];
+								for ( int m = 0; m < numOfDimensions; m++ )
+								{
+									size_t 		index 				= (((static_cast<size_t>(i) * maskDim2 + j) * maskDim3 + k) * numOfDimensions + l) * numOfDimensions + m;
+									
+									rxInv_Placeholder[index] 		= hydeGridData->rx_inv->data[i][j][k][l][m];
+								}
 							}
 						}
 					}
@@ -579,6 +588,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 				// Clean up contiguous array
 				delete[] rxInv_Placeholder;
+				hydeGridData -> rx_inv -> deallocate();
 
 				delete 			dataset;
 				/////////////////////////////////////////////////////////////////////////////////////
@@ -624,7 +634,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 				// Dynamically allocate memory for arrays to avoid stack overflow
 				totalSize 													= static_cast<size_t>(hydeInterpData -> allInterpPtsIndices -> rows) 
 																								* hydeInterpData -> allInterpPtsIndices -> cols;
-				int 				*interpPtsIndices_Placeholder 			= new int[totalSize];
+				int 				*interpPtsIndices_Placeholder 			= new int[ totalSize ];
 				
 				for( int i = 0; i < ( hydeInterpData -> allInterpPtsIndices -> rows ); i++ )
 				{
@@ -656,7 +666,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 				// Dynamically allocate memory for arrays to avoid stack overflow
 				totalSize 													= static_cast<size_t>(hydeInterpData -> allInterpPtsCoords -> rows) 
 																								* hydeInterpData -> allInterpPtsCoords -> cols;
-				double 				*interpPtsCoords_Placeholder 			= new double[totalSize];
+				double 				*interpPtsCoords_Placeholder 			= new double[ totalSize ];
 
 				for( int i = 0; i < ( hydeInterpData -> allInterpPtsCoords -> rows ); i++ )
 				{
@@ -687,7 +697,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 				// Dynamically allocate memory for arrays to avoid stack overflow
 				totalSize 													= static_cast<size_t>(hydeInterpData -> allSigPtsIndices -> rows) 
 																								* hydeInterpData -> allSigPtsIndices -> cols;
-				int 				*sigInterpGrid_Placeholder 			= new int[totalSize];
+				int 				*sigInterpGrid_Placeholder 			= new int[ totalSize ];
 
 				for( int i = 0; i < ( hydeInterpData -> allSigPtsIndices -> rows ); i++ )
 				{
@@ -975,6 +985,7 @@ int getFromHDF5(    const char     			*fileName,
 				-> rx	
 					-> allocate( 	gridSize1, 
 									gridSize2, 
+									gridSize3,
 									numOfDimensions );
 		hydeGridData
 				-> rx -> setIdentity();  // initialize to I
@@ -983,6 +994,7 @@ int getFromHDF5(    const char     			*fileName,
 				-> rx_inv	
 					-> allocate( 	gridSize1, 
 									gridSize2, 
+									gridSize3,
 									numOfDimensions );
 		hydeGridData
 				-> rx_inv -> setIdentity();  // initialize to I
@@ -1057,10 +1069,10 @@ int getFromHDF5(    const char     			*fileName,
 					{
 						hydeGridData 
 								-> rx 
-									-> data[ index1 ][ index2 ][ dir ][ var ] 		= RXI( i1, i2, i3, var , dir);
+									-> data[ index1 ][ index2 ][ index3 ][ dir ][ var ] 		= RXI( i1, i2, i3, var , dir);
 						hydeGridData 
 								-> rx_inv 
-									-> data[ index1 ][ index2 ][ dir ][ var ] 		= rx_inv( i1, i2, i3, numOfDimensions * dir + var );
+									-> data[ index1 ][ index2 ][ index3 ][ dir ][ var ] 		= rx_inv( i1, i2, i3, numOfDimensions * dir + var );
 					}
 				}
 

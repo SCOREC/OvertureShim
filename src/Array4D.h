@@ -6,14 +6,15 @@
 template <typename T>
 struct Array4D
 {
-    T**** data;
+    T***** data;
     int rows;
     int cols;
+	int depth;
 
 	int dim;
 
     // Constructor
-    Array4D() : data(nullptr), rows(0), cols(0), dim(0) {}
+    Array4D() : data(nullptr), rows(0), cols(0), depth(0), dim(0) {}
 
     // Destructor
     ~Array4D()
@@ -22,35 +23,42 @@ struct Array4D
     }
 
     // Allocate the array: [rows][cols][dim][dim]
-    void allocate(int r, int c, int d)
+    void allocate( int r, int c, int d, int di )
     {
-        rows 	= r;
-        cols 	= c;
-        dim 	= d;
-        data 	= new T***[rows];
-        for (int i = 0; i < rows; ++i)
+        rows 		= r;
+        cols 		= c;
+		depth 		= d;
+        dim 		= di;
+
+        data 		= new T****[rows];
+
+        for ( int i = 0; i < rows; ++i )
         {
-            data[i] = new T**[cols];
-            for (int j = 0; j < cols; ++j)
+            data[i] = new T***[cols];
+            for ( int j = 0; j < cols; ++j )
             {
-                data[i][j] = new T*[dim];
-				
-                for (int k = 0; k < dim; ++k)
+                data[i][j] = new T**[depth];
+                for ( int k = 0; k < depth; ++k )
                 {
-                    data[i][j][k] = new T[dim];
+                    data[i][j][k] = new T*[dim];
+					for ( int l = 0; l < dim; ++l )
+					{
+						data[i][j][k][l] = new T[dim];
+					}
                 }
             }
         }
     }
 
     // Fill all elements with a value
-    void fill(const T& value)
+    void fill( const T& value )
     {
         for (int i = 0; i < rows; ++i)
             for (int j = 0; j < cols; ++j)
-                for (int k = 0; k < dim; ++k)
-                    for (int l = 0; l < dim; ++l)
-                        data[i][j][k][l] = value;
+				for (int k = 0; k < depth; ++k)
+					for (int l = 0; l < dim; ++l)
+						for (int m = 0; m < dim; ++m)
+							data[i][j][k][l][m] = value;
     }
 
     // Set identity matrix at every grid point
@@ -58,9 +66,10 @@ struct Array4D
     {
         for (int i = 0; i < rows; ++i)
             for (int j = 0; j < cols; ++j)
-                for (int k = 0; k < dim; ++k)
-                    for (int l = 0; l < dim; ++l)
-                        data[i][j][k][l] = (k == l) ? 1 : 0;
+				for (int k = 0; k < depth; ++k)
+					for (int l = 0; l < dim; ++l)
+						for (int m = 0; m < dim; ++m)
+							data[i][j][k][l][m] 	= (l == m) ? 1 : 0;
     }
 
     // Deallocate the array
@@ -72,34 +81,38 @@ struct Array4D
             {
                 for (int j = 0; j < cols; ++j)
                 {
-                    for (int k = 0; k < dim; ++k)
-                    {
-                        delete[] data[i][j][k];
-                    }
-                    delete[] data[i][j];
+					for (int k = 0; k < depth; ++k)
+					{
+						for (int l = 0; l < dim; ++l)
+						{
+							delete[] data[i][j][k][l];
+						}
+						delete[] data[i][j][k];
+					}
+					delete[] data[i][j];
                 }
                 delete[] data[i];
             }
             delete[] data;
             data = nullptr;
-            rows = cols = dim = 0;
+            rows = cols = depth = dim = 0;
             std::cout << "Deallocated Array4D" << std::endl;
         }
     }
 
-    // Access operator: returns pointer to [M][dim][dim] block for row i
-    T*** operator[](int index)
+    // Access method: returns pointer to [dim][dim] matrix at (i, j, k) grid index
+    T** at( int i, int j, int k )
     {
-        if (index < 0 || index >= rows)
+        if (i < 0 || i >= rows || j < 0 || j >= cols || k < 0 || k >= depth)
             throw std::out_of_range("Index out of range");
-        return data[index];
+        return data[i][j][k];
     }
 
-    // Const access operator
-    const T*** operator[](int index) const
+    // Const access method
+    const T* const* at( int i, int j, int k ) const
     {
-        if (index < 0 || index >= rows)
+        if (i < 0 || i >= rows || j < 0 || j >= cols || k < 0 || k >= depth)
             throw std::out_of_range("Index out of range");
-        return data[index];
+        return data[i][j][k];
     }
 };

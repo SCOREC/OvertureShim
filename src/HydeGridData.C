@@ -48,15 +48,18 @@ void HydeGridData::setGridType()
 	{
 		for ( int j = 0; j < ( this -> rx -> cols ); j++ )
 		{
-			for ( int d = 0; d < this -> dim; d++ )
+			for ( int k = 0; k < ( this -> rx -> depth ); k++ )
 			{
-				for ( int d2 = d + 1; d2 < this -> dim; d2++ )
+				for ( int d = 0; d < this -> dim; d++ )
 				{
-					if ( this -> rx -> data[ i ][ j ][ d ][ d2 ] != 0.0 || 
-						 this -> rx -> data[ i ][ j ][ d2 ][ d ] != 0.0 )
+					for ( int d2 = d + 1; d2 < this -> dim; d2++ )
 					{
-						this -> gridType 		= "Curvilinear";
-						break;
+						if ( this -> rx -> data[ i ][ j ][ k ][ d  ][ d2 ] != 0.0 || 
+							 this -> rx -> data[ i ][ j ][ k ][ d2 ][ d  ] != 0.0 )
+						{
+							this -> gridType 		= "Curvilinear";
+							break;
+						}
 					}
 				}
 			}
