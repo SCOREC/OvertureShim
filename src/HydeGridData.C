@@ -5,6 +5,7 @@
 #include "Array2D.h"
 #include "Array3D.h"
 #include "Array4D.h"
+#include "Array4D_V3.h"
 
 
 
@@ -15,7 +16,7 @@ HydeGridData::HydeGridData( int _gridNumber )
     ///////////////////////////////////////////////////////////////////
 	// Initialize mask. ///////////////////////////////////////////////
     arrayMask          		= new Array3D< int >();
-    xy          			= new Array3D< double >();
+    xy          			= new Array4D_V3< double >();
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
 
@@ -73,17 +74,24 @@ void HydeGridData::setInteriorBox()
 		int startIndex, endIndex;
 
 		startIndex 							= this -> numOfGhostPts[ 0 ][ 0 ];
-		endIndex 							= this -> xy -> dim1 - this -> numOfGhostPts[ 1 ][ 0 ] - 1;
+		endIndex 							= (this -> xy -> dim1) - (this -> numOfGhostPts[ 1 ][ 0 ]) - 1;
 
-		this -> interiorBox[ 0 ][ 0 ] 		= this -> xy -> data[ startIndex ][ 0 ][ 0 ];
-		this -> interiorBox[ 1 ][ 0 ] 		= this -> xy -> data[ endIndex ][ 0 ][ 0 ];
+		this -> interiorBox[ 0 ][ 0 ] 		= this -> xy -> data[ startIndex ][ 0 ][ 0 ][ 0 ];
+		this -> interiorBox[ 1 ][ 0 ] 		= this -> xy -> data[ endIndex   ][ 0 ][ 0 ][ 0 ];
 
 
 		startIndex 							= this -> numOfGhostPts[ 0 ][ 1 ];
-		endIndex 							= this -> xy -> dim1 - this -> numOfGhostPts[ 1 ][ 1 ] - 1;
+		endIndex 							= (this -> xy -> dim2) - (this -> numOfGhostPts[ 1 ][ 1 ]) - 1;
 
-		this -> interiorBox[ 0 ][ 1 ] 		= this -> xy -> data[ 0 ][ startIndex ][ 1 ];
-		this -> interiorBox[ 1 ][ 1 ] 		= this -> xy -> data[ 0 ][ endIndex ][ 1 ];
+		this -> interiorBox[ 0 ][ 1 ] 		= this -> xy -> data[ 0 ][ startIndex ][ 0 ][ 1 ];
+		this -> interiorBox[ 1 ][ 1 ] 		= this -> xy -> data[ 0 ][ endIndex   ][ 0 ][ 1 ];
+
+
+		startIndex 							= this -> numOfGhostPts[ 0 ][ 2 ];
+		endIndex 							= (this -> xy -> dim3) - (this -> numOfGhostPts[ 1 ][ 2 ]) - 1;
+
+		this -> interiorBox[ 0 ][ 2 ] 		= this -> xy -> data[ 0 ][ 0 ][ startIndex ][ 1 ];
+		this -> interiorBox[ 1 ][ 2 ] 		= this -> xy -> data[ 0 ][ 0 ][ endIndex   ][ 1 ];
 	}
 	else
 	{

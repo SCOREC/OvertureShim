@@ -5,6 +5,7 @@
 template <class T> class Array2D;
 template <class T> class Array3D;
 template <class T> class Array4D;
+template <class T> class Array4D_V3;
 
 
 class HydeGridData
@@ -62,5 +63,5 @@ class HydeGridData
 
 		Array2D< double > 		*jacobDet;
 
-		Array3D< double >    	*xy; // arrayData.p1
+		Array4D_V3< double >    	*xy; // arrayData.p1
 };

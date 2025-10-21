@@ -17,6 +17,7 @@
 #include "Array2D.h"
 #include "Array3D.h"
 #include "Array4D.h"
+#include "Array4D_V3.h"
 
 
 
@@ -397,6 +398,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 			// Clean up dynamically allocated memory
 			delete[] mask_Placeholder;
+			hydeGridData -> arrayMask -> deallocate();
 
 			delete 			dataset;
 			/////////////////////////////////////////////////////////////////////////////////////
@@ -406,10 +408,11 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set xy ///////////////////////////////////////////////////////////////////////////
 			hsize_t   		gridsize1[] 				= { static_cast<hsize_t> ( maskDim1 ), 
-															static_cast<hsize_t> ( maskDim2 ), 
+															static_cast<hsize_t> ( maskDim2 ),
+															static_cast<hsize_t> ( maskDim3 ),
 															static_cast<hsize_t> ( numOfDimensions ) };
 
-			DataSpace 		xyspace(  	3, 
+			DataSpace 		xyspace(  	4, 
 										gridsize1 );
 			
 			dataset 									= new 	DataSet( 
@@ -419,21 +422,24 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																		);
 
 			// Dynamically allocate memory for large arrays to avoid stack overflow
-			totalSize 									= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions;
+			totalSize 									= static_cast<size_t>(maskDim1 * maskDim2 * maskDim3 * numOfDimensions);
 			double 			*xy_Placeholder 			= new double[totalSize];
 
 			for( int i = 0; i < ( maskDim1 ); i++ )
 			{
 				for( int j = 0; j < ( maskDim2 ); j++ )
 				{
-					for( int k = 0; k < numOfDimensions; k++ )
+					for( int k = 0; k < ( maskDim3 ); k++ )
 					{
-						size_t 		index 			= (static_cast<size_t>(i) * maskDim2 + j) * numOfDimensions + k;
-						
-						// xy_Placeholder[ i ][ j ][ k ] 			= xy -> data[ gridIndex ][ i ][ j ][ k ];
-						xy_Placeholder[ index ] 			= hydeGridData 
-																			-> xy 
-																				-> data[ i ][ j ][ k ];
+						for ( int d = 0; d < numOfDimensions; d++ )
+						{
+							size_t 		index 			= (static_cast<size_t>(i * maskDim2 + j) * maskDim3 + k) * numOfDimensions + d;
+
+							// xy_Placeholder[ i ][ j ][ k ] 			= xy -> data[ gridIndex ][ i ][ j ][ k ];
+							xy_Placeholder[ index ] 			= hydeGridData 
+																				-> xy 
+																					-> data[ i ][ j ][ k ][ d ];
+						}
 					}
 				}
 			}
@@ -444,6 +450,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 			// Clean up dynamically allocated memory
 			delete[] xy_Placeholder;
+			hydeGridData -> xy -> deallocate();
 
 			delete 			dataset;
 			/////////////////////////////////////////////////////////////////////////////////////
@@ -960,7 +967,8 @@ int getFromHDF5(    const char     			*fileName,
 		hydeGridData 
 				-> xy	
 					-> allocate( 	gridSize1, 
-									gridSize2, 
+									gridSize2,
+									gridSize3,
 									numOfDimensions );
 
 		hydeGridData 
@@ -1031,6 +1039,7 @@ int getFromHDF5(    const char     			*fileName,
 			{
 				int 		index1 			= i1 - gridDimensions( 0, 0 );
 				int 		index2 			= i2 - gridDimensions( 0, 1 );
+				int 		index3 			= i3 - gridDimensions( 0, 2 );
 
 				// printf( "(%i, %i, %i), (%i, %i) ( i1, i2, i3, index1, index2 )\n", 
 				// 		i1, i2, i3, index1, index2 );
@@ -1039,7 +1048,7 @@ int getFromHDF5(    const char     			*fileName,
 				{
 					hydeGridData 
 							-> xy 
-								-> data[ index1 ][ index2 ][ k ]  		= vertexLocal( i1, i2, i3, k );
+								-> data[ index1 ][ index2 ][ index3 ][ k ]  		= vertexLocal( i1, i2, i3, k );
 				}
 
 				for ( int dir = 0; dir < numOfDimensions; dir++ ) // x, y, z
