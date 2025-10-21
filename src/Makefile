@@ -215,14 +215,14 @@ OGMGLIB = $(OV_RPATH)$(Overture)/lib $(LDFLAGS)$(Overture)/lib -lOgmg
 
 BUILDDIR = ../build
 
-SOURCES = inAndOutHDF5.C gridShim.C HydeCompositeGrid.C HydeGridData.C HydeInterpData.C gridPrint.C
-# SOURCES = inAndOutHDF5.C inAndOut.C gridShim.C HydeCompositeGrid.C HydeGridData.C HydeInterpData.C gridPrint.C
+# SOURCES = inAndOutHDF5.C gridShim.C HydeCompositeGrid.C HydeGridData.C HydeInterpData.C gridPrint.C
+SOURCES = inAndOutHDF5.C inAndOut.C gridShim.C HydeCompositeGrid.C HydeGridData.C HydeInterpData.C
 
 # OBJECTS = $(patsubst %.C, $(BUILDDIR)/%.o, $(SOURCES))
 
 # Here are the things we can make
+# PROGRAMS = $(BUILDDIR)/gridShim
 PROGRAMS = $(BUILDDIR)/gridShim
-# PROGRAMS = $(BUILDDIR)/gridShim $(BUILDDIR)/gridPrint
 
 # DEPEND_DATE = $(addprefix $(BUILDDIR)/, depend_date)
 # OBJECTS = $(patsubst $(SOURCES), $(BUILDDIR)/%.o, $(SOURCES))
