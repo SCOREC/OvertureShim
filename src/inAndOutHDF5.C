@@ -359,13 +359,15 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 			/////////////////////////////////////////////////////////////////////////////////////
 			// Set mask /////////////////////////////////////////////////////////////////////////
-			int 			maskDim1 					= hydeGridData -> arrayMask -> rows;
-			int 			maskDim2 					= hydeGridData -> arrayMask -> cols;
+			int 			maskDim1 					= hydeGridData -> arrayMask -> dim1;
+			int 			maskDim2 					= hydeGridData -> arrayMask -> dim2;
+			int 			maskDim3 					= hydeGridData -> arrayMask -> dim3;
 
 			hsize_t   		gridsize2[] 				= { static_cast<hsize_t>(maskDim1), 
-															static_cast<hsize_t>(maskDim2) };
+															static_cast<hsize_t>(maskDim2),
+															static_cast<hsize_t>(maskDim3) };
 
-			DataSpace   	maskspace( 2, gridsize2 );
+			DataSpace   	maskspace( 3, gridsize2 );
 
 			dataset 									= new 	DataSet( 
 																			group.createDataSet(  	"arrayMask", 
@@ -374,15 +376,18 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																		);
 
 			// Dynamically allocate memory for large arrays to avoid stack overflow
-			size_t 			totalSize 					= static_cast<size_t>(maskDim1) * maskDim2;
-			int 			*mask_Placeholder 			= new int[totalSize];
+			size_t 			totalSize 					= static_cast<size_t>(maskDim1 * maskDim2 * maskDim3);
+			int 			*mask_Placeholder 			= new int[ totalSize ];
 			
 			for( int i = 0; i < ( maskDim1 ); i++ )
 			{
 				for( int j = 0; j < ( maskDim2 ); j++ )
 				{
-					size_t 		index 					= static_cast<size_t>(i) * maskDim2 + j;
-					mask_Placeholder[ index ] 			= hydeGridData -> arrayMask -> data[ i ][ j ];
+					for( int k = 0; k < ( maskDim3 ); k++ )
+					{
+						size_t 		index 					= static_cast<size_t>( i * maskDim2 + j ) * maskDim3 + k;
+						mask_Placeholder[ index ] 			= hydeGridData -> arrayMask -> data[ i ][ j ][ k ];
+					}
 				}
 			}
 
@@ -944,11 +949,13 @@ int getFromHDF5(    const char     			*fileName,
 		// Allocate space for gridIndex'th grid in desc and xy
 		int 		gridSize1 			= ( I1.getBound() - gridDimensions( 0, 0 ) ) - ( I1.getBase() - gridDimensions( 0, 0 ) ) + 1;
 		int 		gridSize2 			= ( I2.getBound() - gridDimensions( 0, 1 ) ) - ( I2.getBase() - gridDimensions( 0, 1 ) ) + 1;
+		int 		gridSize3 			= ( I3.getBound() - gridDimensions( 0, 2 ) ) - ( I3.getBase() - gridDimensions( 0, 2 ) ) + 1;
 
 		hydeGridData 
 				-> arrayMask  
 					-> allocate( 	gridSize1, 
-									gridSize2 );
+									gridSize2,
+									gridSize3 );
 
 		hydeGridData 
 				-> xy	
@@ -1002,13 +1009,14 @@ int getFromHDF5(    const char     			*fileName,
 
 				int 		index1 			= i1 - gridDimensions( 0, 0 );
 				int 		index2 			= i2 - gridDimensions( 0, 1 );
+				int 		index3 			= i3 - gridDimensions( 0, 2 );
 
 				// printf( "(%i, %i, %i), (%i, %i), %i ( i1, i2, i3, index1, index2, m )\n", 
 				// 		i1, i2, i3, index1, index2, m );
 
 				hydeGridData 
 					-> arrayMask  
-						-> data[ index1 ][ index2 ]   		= m;
+						-> data[ index1 ][ index2 ][ index3 ]   		= m;
 			}
       		// printf( "\n" );
 			

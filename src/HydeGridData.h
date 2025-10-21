@@ -51,7 +51,7 @@ class HydeGridData
 
 
 		// Define a Kokkos View to store arrayMask used points data
-		Array2D< int >    		*arrayMask; // arrayData.p0
+		Array3D< int >    		*arrayMask; // arrayData.p0
 			
 		// Array4D< double >    	*matrixMap          	= new Array4D< double >();
 		// Array4D< double >    	*matrixMapInv          	= new Array4D< double >();
