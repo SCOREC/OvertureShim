@@ -27,7 +27,7 @@ HydeGridData::HydeGridData( int _gridNumber )
     rx          			= new Array4D< double >();
     rx_inv          		= new Array4D< double >();
 
-	jacobDet 				= new Array2D< double >();
+	jacobDet 				= new Array3D< double >();
 
     // matrixMap       -> allocate( 4, 4 );
     // matrixMapInv    -> allocate( 4, 4 );

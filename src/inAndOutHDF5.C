@@ -460,9 +460,10 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 			{
 				////////////////////////////////////////////////////////////////////////////////////////
 				// Set jacobDet ////////////////////////////////////////////////////////////////////////
-				hsize_t     	interpJacobDetSize[] 						= { static_cast<hsize_t>( hydeGridData -> jacobDet -> rows ),
-																				static_cast<hsize_t>( hydeGridData -> jacobDet -> cols ) };
-				DataSpace   		interpNumPtsSpace( 2, interpJacobDetSize );
+				hsize_t     	interpJacobDetSize[] 						= { static_cast<hsize_t>( hydeGridData -> jacobDet -> dim1 ),
+																				static_cast<hsize_t>( hydeGridData -> jacobDet -> dim2 ),
+																				static_cast<hsize_t>( hydeGridData -> jacobDet -> dim3 ) };
+				DataSpace   		interpNumPtsSpace( 3, interpJacobDetSize );
 				dataset 														= new 	DataSet( 
 																									group.createDataSet(  	"jacobDet", 
 																															PredType::NATIVE_DOUBLE, 
@@ -470,19 +471,23 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																								);
 
 				// Dynamically allocate memory for large arrays to avoid stack overflow
-				totalSize 										= static_cast<size_t>(hydeGridData -> jacobDet -> rows) 
-																					* hydeGridData -> jacobDet -> cols;
+				totalSize 										= static_cast<size_t>(hydeGridData -> jacobDet -> dim1) 
+																					* (hydeGridData -> jacobDet -> dim2) 
+																					* (hydeGridData -> jacobDet -> dim3);
 				double 			*jacobDet_placeholder 			= new double[ totalSize ];
 
-				for( int i = 0; i < hydeGridData -> jacobDet -> rows; i++ )
+				for( int i = 0; i < hydeGridData -> jacobDet -> dim1; i++ )
 				{
-					for( int j = 0; j < hydeGridData -> jacobDet -> cols; j++ )
+					for( int j = 0; j < hydeGridData -> jacobDet -> dim2; j++ )
 					{
-						size_t 		index 			= static_cast<size_t>(i) * hydeGridData -> jacobDet -> cols + j;
+						for( int k = 0; k < hydeGridData -> jacobDet -> dim3; k++ )
+						{
+							size_t 		index 			= static_cast<size_t>( i * (hydeGridData -> jacobDet -> dim2) + j ) * (hydeGridData -> jacobDet -> dim3) + k;
 
-						jacobDet_placeholder[ index ] = hydeGridData 
-														-> jacobDet 
-															-> data[ i ][ j ];
+							jacobDet_placeholder[ index ] = hydeGridData 
+															-> jacobDet 
+																-> data[ i ][ j ][ k ];
+						}
 					}
 				}
 				
@@ -491,6 +496,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 
 				// Clean up dynamically allocated memory
 				delete[] jacobDet_placeholder;
+				hydeGridData -> jacobDet -> deallocate();
 
 				delete 				dataset;
 				////////////////////////////////////////////////////////////////////////////////////////
@@ -1000,7 +1006,7 @@ int getFromHDF5(    const char     			*fileName,
 				-> rx_inv -> setIdentity();  // initialize to I
 
 		hydeGridData 
-				-> jacobDet -> allocate( gridSize1, gridSize2 );
+				-> jacobDet -> allocate( gridSize1, gridSize2, gridSize3 );
 
 		hydeGridData 
 				-> jacobDet -> fill( 1.0 );  // initialize to 1s
@@ -1078,7 +1084,7 @@ int getFromHDF5(    const char     			*fileName,
 
 				hydeGridData 
 						-> jacobDet 
-							-> data[ index1 ][ index2 ]  		= det( i1, i2, i3 );
+							-> data[ index1 ][ index2 ][ index3 ]  		= det( i1, i2, i3 );
 
 			}
 			// printf( "\n" );
