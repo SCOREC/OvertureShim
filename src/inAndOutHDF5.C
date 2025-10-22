@@ -535,7 +535,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 							{
 								for ( int m = 0; m < numOfDimensions; m++ )
 								{
-									size_t 		index 			= (((static_cast<size_t>(i) * maskDim2 + j) * maskDim3 + k) * numOfDimensions + l) * numOfDimensions + m;
+									size_t 		index 			= static_cast<size_t>( ( ( i * maskDim2 + j ) * maskDim3 + k ) * numOfDimensions + l ) * numOfDimensions + m;
 									
 									rx_Placeholder[index] 		= hydeGridData->rx->data[i][j][k][l][m];
 								}
@@ -566,7 +566,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 																			);
 
 				// Create contiguous memory layout for HDF5
-				totalSize 										= static_cast<size_t>(maskDim1) * maskDim2 * numOfDimensions * numOfDimensions;
+				totalSize 										= static_cast<size_t>(maskDim1 * maskDim2 * maskDim3 * numOfDimensions * numOfDimensions);
 				double 				*rxInv_Placeholder 			= new double[ totalSize ];
 
 				// Copy data in row-major order (C-style)
@@ -580,7 +580,7 @@ int sendToHDF5(   	std::string     		nameOfNewFile,
 							{
 								for ( int m = 0; m < numOfDimensions; m++ )
 								{
-									size_t 		index 				= (((static_cast<size_t>(i) * maskDim2 + j) * maskDim3 + k) * numOfDimensions + l) * numOfDimensions + m;
+									size_t 		index 			= static_cast<size_t>( ( ( i * maskDim2 + j ) * maskDim3 + k ) * numOfDimensions + l ) * numOfDimensions + m;
 									
 									rxInv_Placeholder[index] 		= hydeGridData->rx_inv->data[i][j][k][l][m];
 								}
