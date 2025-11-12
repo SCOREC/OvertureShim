@@ -93,8 +93,8 @@ void HydeGridData::setInteriorBox()
 		startIndex 							= this -> numOfGhostPts[ 0 ][ 2 ];
 		endIndex 							= (this -> xy -> dim3) - (this -> numOfGhostPts[ 1 ][ 2 ]) - 1;
 
-		this -> interiorBox[ 0 ][ 2 ] 		= this -> xy -> data[ 0 ][ 0 ][ startIndex ][ 1 ];
-		this -> interiorBox[ 1 ][ 2 ] 		= this -> xy -> data[ 0 ][ 0 ][ endIndex   ][ 1 ];
+		this -> interiorBox[ 0 ][ 2 ] 		= this -> xy -> data[ 0 ][ 0 ][ startIndex ][ 2 ];
+		this -> interiorBox[ 1 ][ 2 ] 		= this -> xy -> data[ 0 ][ 0 ][ endIndex   ][ 2 ];
 	}
 	else
 	{
