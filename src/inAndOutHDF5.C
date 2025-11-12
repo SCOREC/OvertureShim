@@ -894,7 +894,7 @@ int getFromHDF5(    const char     			*fileName,
 		for ( int j = 0; j < 3; j++ )
 		{
 			hydeGridData 
-				-> gridSpacing[ j ] 			= gridSpacing( j );
+				-> gridSpacing[ j ] 			= std::isfinite( gridSpacing( j ) ) ? gridSpacing( j ) : 0.0;
 			
 
 			for ( int i = 0; i < 2; i++ )
@@ -931,7 +931,13 @@ int getFromHDF5(    const char     			*fileName,
             hydeGridData -> npoints                 = ( hydeGridData -> npoints ) * ( hydeGridData -> NP[ j ] );
 		}
 
-
+		for ( int d = hydeGridData -> dim; d < 3; d++ )
+		{
+			hydeGridData 
+				-> dx[ d ] 						= 0.0;
+			hydeGridData 
+				-> gridSpacing[ d ] 			= 0.0;
+		}
 		
 		// Print grid_index_range for verification
 		std::cout 	<< hydeGridData -> extGridIndexRange[ 0 ][ 0 ] << " " 
